@@ -27,9 +27,9 @@ const cat = (r: Recipe) => categories.find((c) => c.id === r.categories[0])?.lab
   <ol class="grid gap-8 lg:grid-cols-[1.15fr_1fr]" role="list">
     {
       lead && (
-        <li class="lg:row-span-4">
+        <li class="lg:row-span-4" data-reveal="zoom">
           <article class="group relative h-full">
-            <div class="relative aspect-photo overflow-hidden rounded-tile lg:aspect-auto lg:h-[calc(100%-9rem)]">
+            <div class="lead-frame relative aspect-photo overflow-hidden rounded-tile lg:aspect-auto lg:h-[calc(100%-9rem)]">
               <Picture
                 src={lead.t.images.finalDish.src}
                 alt={lead.t.images.finalDish.alt}
@@ -38,7 +38,7 @@ const cat = (r: Recipe) => categories.find((c) => c.id === r.categories[0])?.lab
                 sizes="(min-width: 64rem) 50vw, 92vw"
                 quality={siteConfig.images.quality}
                 loading="lazy"
-                class="media-zoom h-full w-full object-cover"
+                class="lead-photo media-zoom h-full w-full object-cover"
               />
               <span class="rank-badge" aria-hidden="true">01</span>
             </div>
@@ -57,7 +57,7 @@ const cat = (r: Recipe) => categories.find((c) => c.id === r.categories[0])?.lab
     }
     {
       rest.map((r, i) => (
-        <li>
+        <li data-reveal="left" style={`--reveal-i: ${i}`}>
           <article class="group relative grid grid-cols-[auto_6rem_1fr] items-center gap-4 border-b border-line pb-6 sm:grid-cols-[auto_8rem_1fr]">
             <span class="w-12 font-serif text-4xl font-bold text-gold italic" aria-hidden="true">
               {String(i + 2).padStart(2, '0')}
@@ -94,6 +94,32 @@ const cat = (r: Recipe) => categories.find((c) => c.id === r.categories[0])?.lab
 </section>
 
 <style>
+  /*
+    Scroll-linked parallax: the #1 photo is slightly oversized and slides
+    within its frame as the frame crosses the viewport (scale/translate are
+    separate properties, so the hover zoom still works on top).
+  */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .lead-frame {
+        view-timeline: --lead block;
+      }
+      .lead-frame :global(.lead-photo) {
+        scale: 1.15;
+        animation: lead-parallax linear both;
+        animation-timeline: --lead;
+      }
+    }
+  }
+  @keyframes lead-parallax {
+    from {
+      translate: 0 -7%;
+    }
+    to {
+      translate: 0 7%;
+    }
+  }
+
   .rank-badge {
     position: absolute;
     inset-block-start: var(--space-sm);

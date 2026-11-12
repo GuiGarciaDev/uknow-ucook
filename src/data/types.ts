@@ -33,7 +33,9 @@ export type MainIngredientId =
   | 'chocolate'
   | 'rice'
   | 'mushrooms'
-  | 'vegetables';
+  | 'vegetables'
+  | 'seafood'
+  | 'beans';
 export type UnitId =
   | 'g'
   | 'kg'

@@ -56,7 +56,7 @@ const ptBR: Dictionary = {
       sticker: 'Zero drama na cozinha*',
       stickerNote: '*Um pouco de drama. Mais queijo.',
       stats: [
-        { value: '10', label: 'receitas testadas na cozinha' },
+        { value: '{recipes}', label: 'receitas testadas na cozinha' },
         { value: '2', label: 'idiomas, os mesmos trocadilhos' },
         { value: '0', label: 'histórias de vida antes da receita' },
       ],
@@ -145,6 +145,8 @@ const ptBR: Dictionary = {
     total: '{n} receitas na despensa',
     filters: {
       title: 'Filtros',
+      saved: 'Sua cozinha',
+      savedOnly: 'Só receitas salvas',
       open: 'Filtros',
       close: 'Fechar filtros',
       apply: 'Ver resultados',
@@ -186,6 +188,12 @@ const ptBR: Dictionary = {
       body: 'Nenhuma receita combina com todos esses filtros. Tente remover um — ou abrace o caos e limpe todos.',
       reset: 'Limpar todos os filtros',
     },
+    emptySaved: {
+      title: 'Nenhuma receita salva ainda.',
+      body: 'Toque em “Salvar receita” em qualquer receita e ela vai esperar por você aqui — salva só neste dispositivo.',
+      reset: 'Ver todas as receitas',
+    },
+    savedChip: 'Receitas salvas',
     loadMore: 'Carregar mais receitas',
     noscript: 'Os filtros precisam de JavaScript, mas todas as receitas estão listadas abaixo.',
   },

@@ -68,15 +68,17 @@ const { min, max } = siteConfig.recipes.servings;
               <li>
                 <input type="checkbox" id={id} data-ingredient-check />
                 <label for={id}>
-                  {item.amount !== undefined && (
-                    <>
-                      <data class="qty" value={item.amount} data-unit={item.unit ?? ''}>
-                        {formatQuantity(item.amount, item.unit, locale)}
-                      </data>{' '}
-                    </>
-                  )}
-                  <span class="name">{item.name}</span>
-                  {item.note && <span class="note">, {item.note}</span>}
+                  <span class="ing-text">
+                    {item.amount !== undefined && (
+                      <>
+                        <data class="qty" value={item.amount} data-unit={item.unit ?? ''}>
+                          {formatQuantity(item.amount, item.unit, locale)}
+                        </data>{' '}
+                      </>
+                    )}
+                    <span class="name">{item.name}</span>
+                    {item.note && <span class="note">, {item.note}</span>}
+                  </span>
                 </label>
               </li>
             );
@@ -119,11 +121,6 @@ const { min, max } = siteConfig.recipes.servings;
   .ingredient-list li:hover {
     background: var(--color-surface-sunken);
   }
-  .ingredient-list input {
-    margin-block-start: 0.35em;
-    flex-shrink: 0;
-    cursor: pointer;
-  }
   .ingredient-list label {
     flex: 1;
     cursor: pointer;
@@ -139,13 +136,105 @@ const { min, max } = siteConfig.recipes.servings;
   .ingredient-list .note {
     color: var(--color-text-secondary);
   }
-  .ingredient-list li:has(input:checked) label {
-    color: var(--color-text-secondary);
-    text-decoration: line-through;
-    text-decoration-color: var(--color-accent);
-    text-decoration-thickness: 2px;
+
+  /* ---------- Custom checkbox with a drawn-in check ---------- */
+  .ingredient-list input {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    margin: 0.2em 0 0;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
   }
-  .ingredient-list li:has(input:checked) .qty {
+  .ingredient-list input::before {
+    content: '';
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+    background: var(--color-accent-contrast);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+    scale: 0;
+  }
+  .ingredient-list input:checked {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+  .ingredient-list input:checked::before {
+    scale: 1;
+  }
+  .ingredient-list input:hover:not(:checked) {
+    border-color: var(--color-accent);
+  }
+
+  /*
+    Strike-through drawn left to right: a 2px gradient line whose width grows
+    from 0 to 100%. On an inline element it sweeps across wrapped lines too.
+  */
+  .ing-text {
+    background: linear-gradient(var(--color-accent), var(--color-accent)) no-repeat 0 58% / 0 2px;
+  }
+  .ingredient-list li:has(input:checked) .ing-text {
+    background-size: 100% 2px;
+    color: var(--color-text-secondary);
+  }
+  .ingredient-list li:has(input:checked) .qty,
+  .ingredient-list li:has(input:checked) .note {
     color: inherit;
+  }
+
+  /*
+    Motion only after the saved checklist has been restored ([data-checklist-ready]
+    is set by the script), so restored items don't all animate on page load.
+  */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-checklist-ready] .ingredient-list input {
+      transition:
+        background-color 200ms ease,
+        border-color 200ms ease;
+    }
+    [data-checklist-ready] .ingredient-list input::before {
+      transition: scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1) 60ms;
+    }
+    [data-checklist-ready] .ingredient-list input:checked {
+      animation: check-pop 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    [data-checklist-ready] .ing-text {
+      transition:
+        background-size 450ms cubic-bezier(0.65, 0, 0.35, 1),
+        color 300ms ease;
+    }
+    [data-checklist-ready] .ingredient-list li:has(input:checked) {
+      animation: row-flash 700ms ease-out;
+    }
+    [data-checklist-ready] [data-check-progress][data-complete] {
+      animation: done-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  }
+  @keyframes check-pop {
+    0% { scale: 1; }
+    40% { scale: 0.8; }
+    75% { scale: 1.15; }
+    100% { scale: 1; }
+  }
+  @keyframes row-flash {
+    0% { background-color: color-mix(in srgb, var(--color-accent) 22%, transparent); }
+    100% { background-color: transparent; }
+  }
+  @keyframes done-pop {
+    50% { scale: 1.12; }
+  }
+
+  /* Everything gathered: the counter turns into a little celebration. */
+  [data-check-progress][data-complete] {
+    color: var(--color-tip);
+    font-weight: var(--weight-bold);
+    transform-origin: right center;
+  }
+  [data-check-progress][data-complete]::before {
+    content: '✓ ';
   }
 </style>

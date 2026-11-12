@@ -32,7 +32,7 @@ export function switchLocalePath(pathname: string, target: Locale): string {
 }
 
 export function absoluteUrl(path: string): string {
-  return new URL(path, siteConfig.seo.siteUrl).href;
+  return new URL(path, import.meta.env.SITE).href;
 }
 
 export interface AlternateLink {

@@ -8,7 +8,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Logo from '../components/layout/Logo.astro';
 import { siteConfig } from '../config/site';
 import { defaultLocale, localeMeta, locales } from '../i18n/config';
-import { localizePath } from '../i18n/routing';
+import { absoluteUrl, localizePath } from '../i18n/routing';
 import { useTranslations } from '../i18n/translations';
 
 const t = useTranslations(defaultLocale);
@@ -24,7 +24,7 @@ const config = {
   fullTitle={`${siteConfig.brand.name} — ${siteConfig.brand.tagline[defaultLocale]}`}
   description={t.meta.homeDescription}
   path="/"
-  canonical={new URL('/', siteConfig.seo.siteUrl).href}
+  canonical={absoluteUrl('/')}
   bare
 >
   <script slot="head" is:inline define:vars={{ config }}>

@@ -60,6 +60,8 @@ export const mainIngredients: Term<MainIngredientId>[] = [
   { id: 'rice', label: { 'en-US': 'Rice', 'pt-BR': 'Arroz' } },
   { id: 'mushrooms', label: { 'en-US': 'Mushrooms', 'pt-BR': 'Cogumelos' } },
   { id: 'vegetables', label: { 'en-US': 'Vegetables', 'pt-BR': 'Legumes e verduras' } },
+  { id: 'seafood', label: { 'en-US': 'Fish & seafood', 'pt-BR': 'Peixes e frutos do mar' } },
+  { id: 'beans', label: { 'en-US': 'Beans', 'pt-BR': 'Feijão' } },
 ];
 
 export const prepBuckets: PrepBucket[] = ['under-15', '15-30', '30-60', 'over-60'];

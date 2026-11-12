@@ -31,8 +31,27 @@ function designTokens(): AstroIntegration {
 
 const { locales, defaultLocale } = siteConfig.i18n;
 
+/**
+ * Public origin used for canonical, hreflang, Open Graph, sitemap and
+ * robots.txt URLs. Resolved at build time, first match wins:
+ *   1. SITE_URL — set it in Vercel once you have a custom domain.
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — the project's production domain
+ *      (e.g. uknow-ucook.vercel.app); Vercel sets it on every build,
+ *      previews included, so previews never claim to be canonical.
+ *   3. VERCEL_URL — this deployment's own URL, as a last resort on Vercel.
+ *   4. localhost for local dev and builds.
+ * Pages read the result through `import.meta.env.SITE`.
+ */
+function resolveSiteUrl(): string {
+  const env = process.env;
+  const host = env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL;
+  const raw = env.SITE_URL || (host ? `https://${host}` : 'http://localhost:4321');
+  return new URL(raw).origin;
+}
+const siteUrl = resolveSiteUrl();
+
 export default defineConfig({
-  site: siteConfig.seo.siteUrl,
+  site: siteUrl,
   trailingSlash: 'never',
   build: { format: 'directory' },
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
@@ -55,7 +74,7 @@ export default defineConfig({
         defaultLocale,
         locales: Object.fromEntries(locales.map((l) => [l, l])),
       },
-      filter: (page) => !/\/404\/?$/.test(page) && page !== `${siteConfig.seo.siteUrl}/`,
+      filter: (page) => !/\/404\/?$/.test(page) && page !== `${siteUrl}/`,
     }),
   ],
   vite: {

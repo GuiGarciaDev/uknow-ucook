@@ -10,13 +10,13 @@ const t = useTranslations(Astro.props.locale).home;
 ---
 
 <div class="shell grid gap-8 py-(--space-3xl) lg:grid-cols-2">
-  <section id="about" aria-labelledby="about-title" class="scroll-mt-24">
+  <section id="about" aria-labelledby="about-title" class="scroll-mt-24" data-reveal>
     <p class="kicker">{t.about.kicker}</p>
     <h2 id="about-title" class="section-title mt-3">{t.about.title}</h2>
     {t.about.body.map((p) => <p class="mt-4 max-w-xl text-lg text-ink-muted">{p}</p>)}
   </section>
 
-  <section aria-labelledby="newsletter-title" class="newsletter relative overflow-hidden rounded-xl p-8 md:p-10">
+  <section aria-labelledby="newsletter-title" class="newsletter relative overflow-hidden rounded-xl p-8 md:p-10" data-reveal style="--reveal-i: 1">
     <p class="kicker">{t.newsletter.kicker}</p>
     <h2 id="newsletter-title" class="mt-3 font-serif text-3xl font-bold md:text-4xl">{t.newsletter.title}</h2>
     <p class="mt-3 max-w-md">{t.newsletter.intro}</p>
@@ -69,5 +69,31 @@ const t = useTranslations(Astro.props.locale).home;
     border-radius: 50%;
     opacity: 0.35;
     pointer-events: none;
+  }
+
+  /* Scroll-linked: the decorative ring rolls in from the corner as the card passes. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .newsletter {
+        view-timeline: --newsletter block;
+      }
+      .newsletter::after {
+        animation: ring-roll linear both;
+        animation-timeline: --newsletter;
+        animation-range: cover 0% cover 100%;
+      }
+    }
+  }
+  @keyframes ring-roll {
+    from {
+      translate: 3rem -3rem;
+      scale: 0.5;
+      rotate: -90deg;
+    }
+    to {
+      translate: -2rem 2rem;
+      scale: 1.25;
+      rotate: 45deg;
+    }
   }
 </style>

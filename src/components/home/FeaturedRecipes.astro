@@ -25,8 +25,8 @@ const t = useTranslations(locale).home.featured;
 
   <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
     {
-      recipes.map((recipe) => (
-        <li>
+      recipes.map((recipe, i) => (
+        <li data-reveal style={`--reveal-i: ${i}`}>
           <RecipeCard recipe={recipe} locale={locale} />
         </li>
       ))

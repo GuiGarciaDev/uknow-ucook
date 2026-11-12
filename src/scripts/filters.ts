@@ -7,7 +7,9 @@
  *
  * Matching rules: OR within a group (Dinner OR Lunch), AND across groups,
  * except dietary preferences, which are AND (Vegetarian AND Gluten-free).
+ * "Saved recipes only" narrows to the slugs saved on this device (localStorage).
  */
+import { siteConfig } from '../config/site';
 
 type Multi = 'category' | 'cuisine' | 'prep' | 'difficulty' | 'diet' | 'ingredient';
 const MULTI: Multi[] = ['category', 'cuisine', 'prep', 'difficulty', 'diet', 'ingredient'];
@@ -21,6 +23,7 @@ interface State {
   maxCook: number;
   maxTotal: number;
   sort: string;
+  saved: boolean;
 }
 
 interface I18n {
@@ -56,6 +59,22 @@ export function initRecipeBrowser() {
   const panel = document.querySelector<HTMLElement>('#filter-panel');
   const searchInput = document.querySelector<HTMLInputElement>('#recipe-search');
   const lang = document.documentElement.lang;
+  const savedInput = form.querySelector<HTMLInputElement>('input[name="saved"]');
+  const savedCount = form.querySelector<HTMLElement>('[data-saved-count]');
+  const emptyDefault = empty?.querySelector<HTMLElement>('[data-empty-default]');
+  const emptySaved = empty?.querySelector<HTMLElement>('[data-empty-saved]');
+  const knownSlugs = new Set(items.map((el) => el.dataset.slug ?? ''));
+
+  /** Slugs saved on this device that still exist in the catalogue. */
+  function readSaved(): Set<string> {
+    try {
+      const raw: unknown = JSON.parse(localStorage.getItem(siteConfig.recipes.storageKeys.saved) ?? '[]');
+      return new Set((Array.isArray(raw) ? raw : []).filter((s): s is string => knownSlugs.has(s)));
+    } catch {
+      return new Set();
+    }
+  }
+  let savedSlugs = readSaved();
 
   let visibleLimit = pageSize;
 
@@ -77,6 +96,7 @@ export function initRecipeBrowser() {
       maxCook: Number(single('maxCook')) || 0,
       maxTotal: Number(single('maxTotal')) || 0,
       sort: single('sort') || 'newest',
+      saved: data.get('saved') === '1',
     };
   }
 
@@ -101,6 +121,7 @@ export function initRecipeBrowser() {
     }
     const hiddenTotal = form!.querySelector<HTMLInputElement>('input[name="maxTotal"]');
     if (hiddenTotal) hiddenTotal.value = params.get('maxTotal') ?? '';
+    if (savedInput) savedInput.checked = params.get('saved') === '1';
     if (searchInput) searchInput.value = params.get('q') ?? '';
     const sort = document.querySelector<HTMLSelectElement>('#recipe-sort');
     if (sort) sort.value = params.get('sort') ?? 'newest';
@@ -108,6 +129,7 @@ export function initRecipeBrowser() {
 
   function syncUrl(state: State) {
     const params = new URLSearchParams();
+    if (state.saved) params.set('saved', '1');
     if (state.q) params.set('q', state.q);
     for (const key of MULTI) state.multi[key].forEach((v) => params.append(key, v));
     if (state.rating) params.set('rating', String(state.rating));
@@ -125,6 +147,7 @@ export function initRecipeBrowser() {
   const tokens = (el: HTMLElement, key: string) => (el.dataset[key] ?? '').split(' ').filter(Boolean);
 
   function matches(el: HTMLLIElement, s: State): boolean {
+    if (s.saved && !savedSlugs.has(el.dataset.slug ?? '')) return false;
     for (const key of MULTI) {
       const wanted = s.multi[key];
       if (!wanted.length) continue;
@@ -163,6 +186,8 @@ export function initRecipeBrowser() {
   function renderChips(s: State) {
     if (!chips || !activeWrap) return 0;
     const entries: { label: string; clear: () => void }[] = [];
+    if (s.saved && savedInput)
+      entries.push({ label: savedInput.dataset.label ?? '', clear: () => (savedInput.checked = false) });
     if (s.q) entries.push({ label: fmt(i18n.searchChip, { q: s.q }), clear: () => searchInput && (searchInput.value = '') });
     for (const key of MULTI) {
       for (const v of s.multi[key]) {
@@ -227,6 +252,11 @@ export function initRecipeBrowser() {
       status.textContent = fmt(filtering ? i18n.matching : i18n.matchingAll, { shown, count: matched.length });
     }
     if (empty) empty.hidden = matched.length > 0;
+    // Saved-only with nothing saved yet gets its own, friendlier message.
+    const nothingSaved = s.saved && savedSlugs.size === 0;
+    if (emptyDefault) emptyDefault.hidden = nothingSaved;
+    if (emptySaved) emptySaved.hidden = !nothingSaved;
+    if (savedCount) savedCount.textContent = String(savedSlugs.size);
     if (loadMore) loadMore.hidden = shown >= matched.length;
 
     const active = renderChips(s);
@@ -285,6 +315,19 @@ export function initRecipeBrowser() {
     // Move focus to the first newly revealed card for keyboard users.
     const visibleNow = [...list.children].filter((el) => !(el as HTMLElement).hidden);
     (visibleNow[firstHiddenIndex]?.querySelector('a') as HTMLAnchorElement | null)?.focus();
+  });
+
+  // Saved list can change in another tab, or while this page sat in the
+  // back/forward cache after the visitor saved a recipe.
+  const refreshSaved = () => {
+    savedSlugs = readSaved();
+    update(false);
+  };
+  window.addEventListener('storage', (e) => {
+    if (e.key === siteConfig.recipes.storageKeys.saved) refreshSaved();
+  });
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) refreshSaved();
   });
 
   writeFormFromUrl();

@@ -15,6 +15,26 @@ import { mushroomRisotto } from './mushroom-risotto';
 import { paoDeQueijo } from './pao-de-queijo';
 import { smashBurger } from './smash-burger';
 import { spaghettiCarbonara } from './spaghetti-carbonara';
+import { acaiNaTigela } from './acai-na-tigela';
+import { baiaoDeDois } from './baiao-de-dois';
+import { boloDeCenoura } from './bolo-de-cenoura';
+import { chickenTacos } from './chicken-tacos';
+import { chocolateChipCookies } from './chocolate-chip-cookies';
+import { coxinha } from './coxinha';
+import { cuscuzNordestino } from './cuscuz-nordestino';
+import { escondidinhoDeCarneSeca } from './escondidinho-de-carne-seca';
+import { feijoada } from './feijoada';
+import { frenchOnionSoup } from './french-onion-soup';
+import { galinhada } from './galinhada';
+import { moquecaBaiana } from './moqueca-baiana';
+import { padThai } from './pad-thai';
+import { pastelDeFeira } from './pastel-de-feira';
+import { picanha } from './picanha';
+import { pizzaMargherita } from './pizza-margherita';
+import { pudimDeLeite } from './pudim-de-leite';
+import { shakshuka } from './shakshuka';
+import { strogonoffDeFrango } from './strogonoff-de-frango';
+import { tapioca } from './tapioca';
 
 export const recipeSources: readonly RecipeSource[] = [
   spaghettiCarbonara,
@@ -27,6 +47,26 @@ export const recipeSources: readonly RecipeSource[] = [
   mushroomRisotto,
   brigadeiro,
   mediterraneanChickenSalad,
+  feijoada,
+  coxinha,
+  moquecaBaiana,
+  pizzaMargherita,
+  picanha,
+  padThai,
+  pastelDeFeira,
+  boloDeCenoura,
+  chickenTacos,
+  strogonoffDeFrango,
+  shakshuka,
+  pudimDeLeite,
+  frenchOnionSoup,
+  tapioca,
+  acaiNaTigela,
+  chocolateChipCookies,
+  baiaoDeDois,
+  escondidinhoDeCarneSeca,
+  galinhada,
+  cuscuzNordestino,
 ];
 
 // Guard rails: catch authoring mistakes at build time.

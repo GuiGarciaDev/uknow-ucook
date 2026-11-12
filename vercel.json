@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/pt-BR(?:/.*)?", "status": 404, "dest": "/pt-BR/404/index.html" },
+    { "src": "/en-US(?:/.*)?", "status": 404, "dest": "/en-US/404/index.html" },
+    {
+      "src": "/.*",
+      "has": [{ "type": "header", "key": "accept-language", "value": "^\\s*pt" }],
+      "status": 404,
+      "dest": "/pt-BR/404/index.html"
+    },
+    { "src": "/.*", "status": 404, "dest": "/404.html" }
+  ]
+}

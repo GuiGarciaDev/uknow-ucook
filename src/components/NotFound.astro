@@ -1,0 +1,45 @@
+---
+/**
+ * The 404 page body, rendered once per locale (`/404` falls back to the
+ * default locale; `/<locale>/404` is localized). The host serves these files
+ * at whatever URL was missing — see vercel.json.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RecipeCard from './ui/RecipeCard.astro';
+import { getTrendingRecipes } from '../data/recipes';
+import type { Locale } from '../i18n/config';
+import { localizePath } from '../i18n/routing';
+import { useTranslations } from '../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const picks = getTrendingRecipes(locale, 3);
+---
+
+<BaseLayout locale={locale} title={t.meta.notFoundTitle} description={t.notFound.body} path="/404" noindex>
+  <section class="shell py-(--space-3xl) text-center" aria-labelledby="nf-title">
+    <p class="kicker justify-center">{t.notFound.kicker}</p>
+    <h1 id="nf-title" class="display mt-4 text-page">{t.notFound.title}</h1>
+    <p class="mx-auto mt-4 max-w-xl text-lead text-ink-muted">{t.notFound.body}</p>
+    <a href={localizePath(locale, '/')} class="btn btn-primary btn-lg mt-8">{t.notFound.cta}</a>
+  </section>
+  <ul class="shell grid gap-6 pb-(--space-3xl) md:grid-cols-3" role="list">
+    {picks.map((r) => <li><RecipeCard recipe={r} locale={locale} headingLevel="h2" /></li>)}
+  </ul>
+</BaseLayout>
+
+<script>
+  // The page was built at /404, but it is shown at the URL that was missing.
+  // Point the language switcher at that same URL in the other language, so
+  // switching shows this page translated (without JS it links to the home).
+  import { isLocale } from '../i18n/config';
+  import { switchLocalePath } from '../i18n/routing';
+
+  document.querySelectorAll<HTMLAnchorElement>('a[data-locale-link]').forEach((a) => {
+    const target = a.dataset.localeLink;
+    if (isLocale(target)) a.href = switchLocalePath(location.pathname, target) + location.search;
+  });
+</script>

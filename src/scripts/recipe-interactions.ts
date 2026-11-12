@@ -96,7 +96,10 @@ export function initRecipeInteractions() {
 
   function renderProgress() {
     const done = checks.filter((c) => c.checked).length;
-    if (progress) progress.textContent = fill(progress.dataset.template ?? '', { done, total: checks.length });
+    if (progress) {
+      progress.textContent = fill(progress.dataset.template ?? '', { done, total: checks.length });
+      progress.toggleAttribute('data-complete', checks.length > 0 && done === checks.length);
+    }
   }
   checks.forEach((c) => {
     c.checked = saved.has(c.id);
@@ -109,6 +112,8 @@ export function initRecipeInteractions() {
     });
   });
   renderProgress();
+  // Enable check animations only after the restored state has painted.
+  requestAnimationFrame(() => requestAnimationFrame(() => section.setAttribute('data-checklist-ready', '')));
 
   /** Replay the click "pop" animation (CSS keys off .is-popping). */
   const pop = (btn: HTMLElement) => {

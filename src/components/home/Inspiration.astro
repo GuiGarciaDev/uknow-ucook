@@ -8,6 +8,7 @@ interface Props {
   locale: Locale;
 }
 const t = useTranslations(Astro.props.locale).home.inspiration;
+const words = t.quoteText.split(/\s+/);
 ---
 
 <section aria-labelledby="inspiration-title" class="border-y border-line bg-sunken py-(--space-3xl)">
@@ -18,7 +19,7 @@ const t = useTranslations(Astro.props.locale).home.inspiration;
       <ol class="grid gap-6 md:grid-cols-3" role="list">
         {
           t.tips.map((tip, i) => (
-            <li class="card-surface flex flex-col p-6">
+            <li class="card-surface flex flex-col p-6" data-reveal style={`--reveal-i: ${i}`}>
               <span class="font-mono text-xs font-bold tracking-widest text-gold-strong">
                 TIP_{String(i + 1).padStart(2, '0')}
               </span>
@@ -29,7 +30,7 @@ const t = useTranslations(Astro.props.locale).home.inspiration;
         }
       </ol>
 
-      <aside aria-labelledby="seasonal-title" class="card-surface p-6">
+      <aside aria-labelledby="seasonal-title" class="card-surface p-6" data-reveal="zoom" style="--reveal-i: 1">
         <h3 id="seasonal-title" class="flex items-center gap-2 font-serif text-xl font-bold">
           <Icon name="leaf" class="text-herb" />
           {t.seasonalTitle}
@@ -48,10 +49,41 @@ const t = useTranslations(Astro.props.locale).home.inspiration;
     </div>
 
     <figure class="mx-auto mt-16 max-w-3xl text-center">
-      <blockquote class="font-serif text-3xl leading-snug text-balance italic md:text-4xl">
-        <p>“{t.quoteText}”</p>
+      <!--
+        Scroll-linked pull-quote: each word brightens in turn as the quote
+        scrolls through the viewport (words are plain inline spans, so it
+        reads normally to screen readers and without the effect).
+      -->
+      <blockquote class="pull-quote font-serif text-3xl leading-snug text-balance italic md:text-4xl" style={`--n: ${words.length}`}>
+        <p>{words.map((w, i) => <><span class="qw" style={`--i: ${i}`}>{i === 0 ? '“' : ''}{w}{i === words.length - 1 ? '”' : ''}</span>{i < words.length - 1 && ' '}</>)}</p>
       </blockquote>
       <figcaption class="mt-4 text-sm text-ink-muted">— <cite class="not-italic">{t.quoteAuthor}</cite></figcaption>
     </figure>
   </div>
 </section>
+
+<style>
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .pull-quote {
+        view-timeline: --quote block;
+      }
+      .qw {
+        animation: word-light linear both;
+        animation-timeline: --quote;
+        /* Word i lights up during its own slice of the 10%–55% "cover" range. */
+        animation-range:
+          cover calc(10% + var(--i) / var(--n) * 45%)
+          cover calc(14% + var(--i) / var(--n) * 45%);
+      }
+    }
+  }
+  @keyframes word-light {
+    from {
+      opacity: 0.15;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+</style>

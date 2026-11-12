@@ -1,25 +1,12 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import RecipeCard from '../components/ui/RecipeCard.astro';
-import { getTrendingRecipes } from '../data/recipes';
+import NotFound from '../components/NotFound.astro';
 import { defaultLocale } from '../i18n/config';
-import { localizePath } from '../i18n/routing';
-import { useTranslations } from '../i18n/translations';
+import { getLocaleFromPath } from '../i18n/routing';
 
-// Static hosts serve one 404 page, so it ships in the default locale.
-const locale = defaultLocale;
-const t = useTranslations(locale);
-const picks = getTrendingRecipes(locale, 3);
+// Built as /404.html for URLs outside a locale (default language). The dev
+// server renders this page for every missing URL, so it reads the locale
+// from the requested path there; production uses /<locale>/404 instead.
+const locale = getLocaleFromPath(Astro.url.pathname) ?? defaultLocale;
 ---
 
-<BaseLayout locale={locale} title={t.meta.notFoundTitle} description={t.notFound.body} path="/404" noindex>
-  <section class="shell py-(--space-3xl) text-center" aria-labelledby="nf-title">
-    <p class="kicker justify-center">{t.notFound.kicker}</p>
-    <h1 id="nf-title" class="display mt-4 text-page">{t.notFound.title}</h1>
-    <p class="mx-auto mt-4 max-w-xl text-lead text-ink-muted">{t.notFound.body}</p>
-    <a href={localizePath(locale, '/')} class="btn btn-primary btn-lg mt-8">{t.notFound.cta}</a>
-  </section>
-  <ul class="shell grid gap-6 pb-(--space-3xl) md:grid-cols-3" role="list">
-    {picks.map((r) => <li><RecipeCard recipe={r} locale={locale} headingLevel="h2" /></li>)}
-  </ul>
-</BaseLayout>
+<NotFound locale={locale} />

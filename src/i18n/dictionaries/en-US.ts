@@ -61,7 +61,7 @@ const enUS = {
       sticker: 'Zero kitchen drama*',
       stickerNote: '*Some drama. Mostly cheese.',
       stats: [
-        { value: '10', label: 'kitchen-tested recipes' },
+        { value: '{recipes}', label: 'kitchen-tested recipes' },
         { value: '2', label: 'languages, same puns' },
         { value: '0', label: 'life stories before the recipe' },
       ],
@@ -150,6 +150,8 @@ const enUS = {
     total: '{n} recipes in the pantry',
     filters: {
       title: 'Filters',
+      saved: 'Your kitchen',
+      savedOnly: 'Saved recipes only',
       open: 'Filters',
       close: 'Close filters',
       apply: 'Show results',
@@ -191,6 +193,12 @@ const enUS = {
       body: 'No recipe matches all of those filters. Try removing one — or embrace chaos and clear them all.',
       reset: 'Clear all filters',
     },
+    emptySaved: {
+      title: 'No saved recipes yet.',
+      body: 'Tap “Save recipe” on any recipe and it will be waiting for you here — saved on this device only.',
+      reset: 'Browse all recipes',
+    },
+    savedChip: 'Saved recipes',
     loadMore: 'Load more recipes',
     noscript: 'Filters need JavaScript, but every recipe is listed below.',
   },

@@ -9,7 +9,10 @@ interface Props {
   pathname: string;
   variant?: 'compact' | 'full';
 }
-const { locale, pathname, variant = 'compact' } = Astro.props;
+const { locale, variant = 'compact' } = Astro.props;
+// The 404 page exists only once (there is no /<locale>/404), so on it the
+// switcher points at each locale's home instead of a page that doesn't exist.
+const pathname = Astro.props.pathname.replace(/\/404\/?$/, '/');
 const t = useTranslations(locale);
 ---
 

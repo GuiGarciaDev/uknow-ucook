@@ -6,7 +6,7 @@ import { siteConfig } from '../../config/site';
 import type { Recipe } from '../../data/types';
 import type { Locale } from '../../i18n/config';
 import { localizePath } from '../../i18n/routing';
-import { formatMinutes, useTranslations } from '../../i18n/translations';
+import { fmt, formatMinutes, useTranslations } from '../../i18n/translations';
 
 interface Props {
   locale: Locale;
@@ -19,7 +19,7 @@ const recipeBase = localizePath(locale, '/recipes');
 const coverHref = `${recipeBase}/${cover.slug}`;
 ---
 
-<section aria-labelledby="hero-title" class="relative overflow-hidden">
+<section aria-labelledby="hero-title" class="hero relative overflow-hidden">
   <div class="hero-wash" aria-hidden="true"></div>
   <div class="shell relative grid items-center gap-12 pt-10 pb-16 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-16 lg:pb-24">
     <div class="reveal">
@@ -52,7 +52,7 @@ const coverHref = `${recipeBase}/${cover.slug}`;
           t.stats.map((s) => (
             <div class="flex flex-col-reverse gap-1">
               <dt class="text-xs leading-snug text-ink-muted">{s.label}</dt>
-              <dd class="font-serif text-4xl font-bold text-ink">{s.value}</dd>
+              <dd class="font-serif text-4xl font-bold text-ink">{fmt(s.value, { recipes: slugs.length })}</dd>
             </div>
           ))
         }
@@ -70,7 +70,7 @@ const coverHref = `${recipeBase}/${cover.slug}`;
           quality={siteConfig.images.quality}
           loading="eager"
           fetchpriority="high"
-          class="h-full w-full object-cover"
+          class="hero-photo h-full w-full object-cover"
         />
       </div>
 
@@ -78,7 +78,7 @@ const coverHref = `${recipeBase}/${cover.slug}`;
         <span>{t.sticker}</span>
       </p>
 
-      <figcaption class="card-surface absolute right-4 -bottom-6 left-4 flex items-center gap-4 p-4 sm:right-auto sm:-left-6 sm:max-w-xs">
+      <figcaption class="hero-caption card-surface absolute right-4 -bottom-6 left-4 flex items-center gap-4 p-4 sm:right-auto sm:-left-6 sm:max-w-xs">
         <span class="grid size-12 shrink-0 place-items-center rounded-full bg-gold text-gold-contrast">
           <Icon name="chef" size={24} />
         </span>
@@ -139,6 +139,68 @@ const coverHref = `${recipeBase}/${cover.slug}`;
     }
     .reveal {
       animation: rise var(--transition-slow) both;
+    }
+  }
+
+  /*
+    Scroll-linked exit: everything is tied to the hero's own view timeline,
+    over the range where it scrolls out of the viewport. Uses the individual
+    translate/scale/rotate properties so it composes with the existing
+    load-in (rise) and idle (wobble) animations instead of fighting them.
+  */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .hero {
+        view-timeline: --hero block;
+      }
+      .reveal {
+        animation:
+          rise var(--transition-slow) both,
+          hero-copy-exit linear both;
+        animation-timeline: auto, --hero;
+        animation-range: normal, exit 0% exit 80%;
+      }
+      .hero-frame :global(.hero-photo) {
+        animation: hero-photo-drift linear both;
+        animation-timeline: --hero;
+        animation-range: exit 0% exit 100%;
+      }
+      .sticker {
+        animation:
+          wobble 6s ease-in-out infinite,
+          sticker-spin linear both;
+        animation-timeline: auto, --hero;
+        animation-range: normal, exit 0% exit 70%;
+      }
+      .hero-caption {
+        animation: caption-float linear both;
+        animation-timeline: --hero;
+        animation-range: exit 0% exit 100%;
+      }
+    }
+  }
+  @keyframes hero-copy-exit {
+    to {
+      opacity: 0.15;
+      translate: 0 -4rem;
+    }
+  }
+  @keyframes hero-photo-drift {
+    to {
+      scale: 1.18;
+      translate: 0 6%;
+    }
+  }
+  @keyframes sticker-spin {
+    to {
+      rotate: 160deg;
+      scale: 0.6;
+      opacity: 0;
+    }
+  }
+  @keyframes caption-float {
+    to {
+      translate: 1.5rem -5rem;
     }
   }
 

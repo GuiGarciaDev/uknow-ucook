@@ -278,7 +278,7 @@ export const siteConfig = {
   /* Recipes                                                             */
   /* ------------------------------------------------------------------ */
   recipes: {
-    initialCount: 10,
+    initialCount: 30,
     defaultPageSize: 6,
     featuredSlugs: ['spaghetti-carbonara', 'pao-de-queijo', 'chocolate-lava-cake'],
     card: {
@@ -316,8 +316,6 @@ export const siteConfig = {
   /* SEO                                                                 */
   /* ------------------------------------------------------------------ */
   seo: {
-    /** Placeholder production origin used for canonical/OG/sitemap URLs. */
-    siteUrl: 'https://uknowucook.example',
     titleTemplate: '%s · UKnowUCook',
     twitterHandle: '@uknowucook',
     themeColor: { light: '#FFFFF0', dark: '#1F1B16' },

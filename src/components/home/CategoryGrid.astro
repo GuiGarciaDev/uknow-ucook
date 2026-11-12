@@ -43,13 +43,17 @@ const tiles = categoryTiles.map((tile) => ({
 <section aria-labelledby="categories-title" class="bg-card-muted/50 py-(--space-3xl)">
   <div class="shell">
     <SectionHeading id="categories-title" kicker={t.kicker} title={t.title} intro={t.intro} />
-    <ul class="grid grid-cols-2 gap-4 md:grid-cols-4" role="list">
+    <!--
+      Phones: a horizontal, snap-centred strip (8 tall tiles stacked 4 rows
+      deep was a long scroll). From md up: the editorial bento grid.
+    -->
+    <ul class="cat-list scrollbar-none gap-4 md:grid md:grid-cols-4" role="list">
       {
         tiles.map((tile, i) => (
-          <li class:list={[[0, 5, 6, 7].includes(i) ? 'md:col-span-2' : '']}>
+          <li class:list={['cat-item', [0, 5, 6, 7].includes(i) ? 'md:col-span-2' : '']} data-reveal="zoom" style={`--reveal-i: ${i % 4}`}>
             <a
               href={`${base}?${tile.query}`}
-              class="group relative flex aspect-[4/5] items-end overflow-hidden rounded-tile no-underline shadow-tile md:aspect-auto md:h-64"
+              class="cat-tile group relative flex aspect-[4/5] items-end overflow-hidden rounded-tile no-underline shadow-tile md:aspect-auto md:h-64"
             >
               {tile.image && (
                 <Picture
@@ -80,6 +84,52 @@ const tiles = categoryTiles.map((tile) => ({
 </section>
 
 <style>
+  @media (max-width: 47.999rem) {
+    .cat-list {
+      display: flex;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      /* Bleed to the screen edges, and pad so the first/last tile can centre. */
+      margin-inline: calc(var(--layout-gutter) * -1);
+      padding: var(--space-xs) 16%;
+      scroll-padding-inline: 16%;
+    }
+    .cat-item {
+      flex: 0 0 68%;
+      scroll-snap-align: center;
+    }
+    /* The entry reveal is a vertical effect; the strip has its own motion. */
+    .cat-item[data-reveal] {
+      animation: none;
+    }
+  }
+
+  /*
+    Scroll-linked along the strip: each tile's progress through the
+    scroller's width drives its size, so the centred tile is full-size and
+    its neighbours recede.
+  */
+  @supports (animation-timeline: view()) {
+    @media (max-width: 47.999rem) and (prefers-reduced-motion: no-preference) {
+      .cat-tile {
+        animation: tile-focus linear both;
+        animation-timeline: view(inline);
+      }
+    }
+  }
+  @keyframes tile-focus {
+    0%,
+    100% {
+      scale: 0.86;
+      opacity: 0.6;
+    }
+    50% {
+      scale: 1;
+      opacity: 1;
+    }
+  }
+
   .tile-scrim {
     background: linear-gradient(to top, var(--color-media-scrim), transparent 65%);
   }

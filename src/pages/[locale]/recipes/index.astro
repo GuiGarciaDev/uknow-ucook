@@ -141,6 +141,17 @@ const jsonLd = [
           </button>
         </div>
 
+        <!-- Saved recipes live in localStorage; the script fills in the count. -->
+        <fieldset class="border-b border-line pb-5">
+          <legend class="sr-only">{f.saved}</legend>
+          <label for="f-saved" class="saved-toggle">
+            <Icon name="bookmark" size={18} class="shrink-0 text-gold-strong" />
+            <span class="flex-1 text-sm font-semibold">{f.savedOnly}</span>
+            <span class="text-mono-meta text-ink-muted" data-saved-count aria-hidden="true"></span>
+            <input id="f-saved" type="checkbox" role="switch" name="saved" value="1" class="switch" data-label={t.recipes.savedChip} />
+          </label>
+        </fieldset>
+
         <FilterGroup
           legend={f.category}
           name="category"
@@ -267,9 +278,17 @@ const jsonLd = [
 
       <div class="py-16 text-center" data-empty hidden>
         <p class="font-serif text-5xl" aria-hidden="true">🍳</p>
-        <h3 class="mt-4 font-serif text-3xl font-bold">{t.recipes.empty.title}</h3>
-        <p class="mx-auto mt-2 max-w-md text-ink-muted">{t.recipes.empty.body}</p>
-        <button type="button" class="btn btn-primary mt-6" data-clear-filters>{t.recipes.empty.reset}</button>
+        <!-- Two messages: generic "no matches", or "you haven't saved anything yet". -->
+        <div data-empty-default>
+          <h3 class="mt-4 font-serif text-3xl font-bold">{t.recipes.empty.title}</h3>
+          <p class="mx-auto mt-2 max-w-md text-ink-muted">{t.recipes.empty.body}</p>
+          <button type="button" class="btn btn-primary mt-6" data-clear-filters>{t.recipes.empty.reset}</button>
+        </div>
+        <div data-empty-saved hidden>
+          <h3 class="mt-4 font-serif text-3xl font-bold">{t.recipes.emptySaved.title}</h3>
+          <p class="mx-auto mt-2 max-w-md text-ink-muted">{t.recipes.emptySaved.body}</p>
+          <button type="button" class="btn btn-primary mt-6" data-clear-filters>{t.recipes.emptySaved.reset}</button>
+        </div>
       </div>
 
       <div class="mt-10 text-center">
@@ -282,6 +301,63 @@ const jsonLd = [
 </BaseLayout>
 
 <style>
+  .saved-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    cursor: pointer;
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+  .saved-toggle:hover {
+    border-color: var(--color-accent);
+  }
+  .saved-toggle:has(:checked) {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  }
+
+  /* A native checkbox styled as a switch (role="switch" announces on/off). */
+  .switch {
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    inline-size: 2.4rem;
+    block-size: 1.35rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-border-strong);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+  }
+  .switch::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.175rem;
+    inset-inline-start: 0.175rem;
+    inline-size: 1rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--color-surface);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+    transition: translate 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .switch:checked {
+    background: var(--color-accent);
+  }
+  .switch:checked::before {
+    translate: 1.05rem 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .switch::before {
+      transition: none;
+    }
+  }
+
   @media (min-width: 64rem) {
     /* Desktop: the popover is just a sticky sidebar. */
     .filter-panel {
