@@ -1,0 +1,74 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section id="substitutions" aria-labelledby="subs-title" class="scroll-mt-28">
+  <h2 id="subs-title">{t.recipe.sections.substitutions}</h2>
+  <!-- A description list: each term (the original ingredient) maps to its swap. -->
+  <dl class="subs">
+    {
+      recipe.t.substitutions.map((s) => (
+        <div class="sub">
+          <dt>
+            <span class="text-mono-meta text-ink-muted uppercase">{t.recipe.substitution.instead}</span>
+            <span class="block font-semibold">{s.original}</span>
+          </dt>
+          <dd class="sub-swap">
+            <Icon name="arrowRight" size={18} class="hidden text-gold sm:block" />
+            <span>
+              <span class="text-mono-meta text-ink-muted uppercase">{t.recipe.substitution.use}</span>
+              <span class="block font-semibold text-gold-strong">{s.swap}</span>
+            </span>
+          </dd>
+          <dd class="sub-note">{s.note}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>
+
+<style>
+  .subs {
+    margin: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+  .sub {
+    display: grid;
+    gap: var(--space-2xs) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-base);
+  }
+  .sub + .sub {
+    border-block-start: 1px solid var(--color-border);
+  }
+  @media (min-width: 40rem) {
+    .sub {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .sub dd {
+    margin: 0;
+  }
+  .sub-swap {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+  .sub-note {
+    grid-column: 1 / -1;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+</style>

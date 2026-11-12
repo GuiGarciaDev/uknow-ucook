@@ -1,0 +1,35 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import RecipeCard from '../ui/RecipeCard.astro';
+import Icon from '../ui/Icon.astro';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  recipes: Recipe[];
+}
+const { locale, recipes } = Astro.props;
+const t = useTranslations(locale).home.featured;
+---
+
+<section aria-labelledby="featured-title" class="shell py-(--space-3xl)">
+  <SectionHeading id="featured-title" kicker={t.kicker} title={t.title} intro={t.intro}>
+    <a href={localizePath(locale, '/recipes')} class="btn btn-outline shrink-0">
+      {t.viewAll}
+      <Icon name="arrowRight" size={16} />
+    </a>
+  </SectionHeading>
+
+  <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+    {
+      recipes.map((recipe) => (
+        <li>
+          <RecipeCard recipe={recipe} locale={locale} />
+        </li>
+      ))
+    }
+  </ul>
+</section>

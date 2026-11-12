@@ -1,0 +1,336 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import RecipeCard from '../../../components/ui/RecipeCard.astro';
+import FilterGroup from '../../../components/recipes/FilterGroup.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import { siteConfig } from '../../../config/site';
+import {
+  categories,
+  cookTimeSteps,
+  cuisines,
+  diets,
+  difficulties,
+  mainIngredients,
+  prepBuckets,
+  ratingSteps,
+} from '../../../data/categories';
+import { getRecipes } from '../../../data/recipes';
+import type { Recipe } from '../../../data/types';
+import type { Locale } from '../../../i18n/config';
+import { absoluteUrl, localeParams, localizePath } from '../../../i18n/routing';
+import { fmt, formatNumber, useTranslations } from '../../../i18n/translations';
+
+export const getStaticPaths = localeParams;
+
+const locale = Astro.params.locale as Locale;
+const t = useTranslations(locale);
+const f = t.recipes.filters;
+const recipes = getRecipes(locale);
+const total = recipes.length;
+const pageSize = siteConfig.recipes.defaultPageSize;
+
+const count = (pred: (r: Recipe) => boolean) => recipes.filter(pred).length;
+const strip = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+const haystack = (r: Recipe) =>
+  strip(
+    [
+      r.t.title,
+      r.t.description,
+      ...r.t.keywords,
+      ...r.t.ingredientGroups.flatMap((g) => g.items.map((i) => i.name)),
+      ...r.categories.map((c) => categories.find((x) => x.id === c)?.label[locale] ?? ''),
+      ...r.cuisines.map((c) => cuisines.find((x) => x.id === c)?.label[locale] ?? ''),
+    ].join(' '),
+  );
+
+const i18n = {
+  matching: t.recipes.matching,
+  matchingAll: t.recipes.matchingAll,
+  removeFilter: t.recipes.removeFilter,
+  searchChip: t.recipes.searchChip,
+  maxTotalChip: `≤ {n} min`,
+  maxCookChip: f.cookTimeUpTo,
+  ratingChip: f.ratingAtLeast,
+};
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: t.meta.recipesTitle,
+    description: t.meta.recipesDescription,
+    inLanguage: locale,
+    url: absoluteUrl(localizePath(locale, '/recipes')),
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: total,
+      itemListElement: recipes.map((r, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: absoluteUrl(localizePath(locale, `/recipes/${r.slug}`)),
+        name: r.t.title,
+      })),
+    },
+  },
+];
+---
+
+<BaseLayout locale={locale} title={t.meta.recipesTitle} description={t.meta.recipesDescription} path="/recipes" jsonLd={jsonLd}>
+  <div class="shell pt-10 pb-6 lg:pt-14">
+    <nav aria-label={t.a11y.breadcrumb}>
+      <ol class="flex items-center gap-2 text-sm text-ink-muted">
+        <li><a href={localizePath(locale, '/')} class="hover:text-ink">{t.recipe.breadcrumbHome}</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a href={localizePath(locale, '/recipes')} aria-current="page" class="font-semibold text-ink no-underline">{t.recipe.breadcrumbRecipes}</a></li>
+      </ol>
+    </nav>
+
+    <header class="mt-6 grid gap-8 lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-end">
+      <div>
+        <p class="kicker">{t.recipes.kicker}</p>
+        <h1 class="display mt-4 text-page">{t.recipes.title}</h1>
+        <p class="mt-4 max-w-2xl text-lead text-ink-muted">{t.recipes.intro}</p>
+        <p class="mt-4 font-mono text-sm text-gold-strong">{fmt(t.recipes.total, { n: total })}</p>
+      </div>
+      <search>
+        <label for="recipe-search" class="mb-2 block text-sm font-semibold">{t.search.label}</label>
+        <div class="relative">
+          <Icon name="search" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-muted" />
+          <input
+            id="recipe-search"
+            type="search"
+            name="q"
+            form="recipe-filters"
+            class="field rounded-pill pl-11 text-base"
+            style="min-block-size: var(--button-height-lg)"
+            placeholder={t.search.placeholder}
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </div>
+      </search>
+    </header>
+  </div>
+
+  <noscript>
+    <p class="shell"><span class="callout block" data-type="storage">{t.recipes.noscript}</span></p>
+  </noscript>
+
+  <div
+    class="shell grid gap-10 lg:grid-cols-[var(--layout-sidebar-width)_1fr]"
+    data-recipe-browser
+    data-page-size={pageSize}
+    data-i18n={JSON.stringify(i18n)}
+  >
+    <!--
+      Filters: a sticky sidebar on desktop; on small screens the same <aside>
+      becomes a native popover drawer (no duplicated markup, no JS needed to open it).
+    -->
+    <aside id="filter-panel" popover aria-labelledby="filters-title" class="filter-panel">
+      <form id="recipe-filters" action={localizePath(locale, '/recipes')} method="get">
+        <div class="mb-6 flex items-center justify-between gap-3">
+          <h2 id="filters-title" class="font-serif text-2xl font-bold">{f.title}</h2>
+          <button
+            type="button"
+            class="btn btn-outline btn-icon lg:hidden"
+            popovertarget="filter-panel"
+            popovertargetaction="hide"
+            aria-label={f.close}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <FilterGroup
+          legend={f.category}
+          name="category"
+          options={categories.map((c) => ({ value: c.id, label: c.label[locale], count: count((r) => r.categories.includes(c.id)) }))}
+        />
+        <FilterGroup
+          legend={f.cuisine}
+          name="cuisine"
+          options={cuisines.map((c) => ({ value: c.id, label: c.label[locale], count: count((r) => r.cuisines.includes(c.id)) }))}
+        />
+        <FilterGroup
+          legend={f.prepTime}
+          name="prep"
+          options={prepBuckets.map((b) => ({ value: b, label: f.prepBuckets[b], count: count((r) => r.prepBucket === b) }))}
+        />
+        <FilterGroup
+          legend={f.difficulty}
+          name="difficulty"
+          options={difficulties.map((d) => ({ value: d.id, label: d.label[locale], count: count((r) => r.difficulty === d.id) }))}
+        />
+        <FilterGroup
+          legend={f.diet}
+          name="diet"
+          options={diets.map((d) => ({ value: d.id, label: d.label[locale], count: count((r) => r.diets.includes(d.id)) }))}
+        />
+        <FilterGroup
+          legend={f.ingredient}
+          name="ingredient"
+          options={mainIngredients.map((m) => ({ value: m.id, label: m.label[locale], count: count((r) => r.mainIngredients.includes(m.id)) }))}
+        />
+        <FilterGroup
+          legend={f.rating}
+          name="rating"
+          type="radio"
+          options={[
+            { value: '', label: f.ratingAny },
+            ...ratingSteps.map((s) => ({
+              value: String(s),
+              label: fmt(f.ratingAtLeast, { n: formatNumber(s, locale) }),
+              count: count((r) => r.rating.value >= s),
+            })),
+          ]}
+        />
+        <FilterGroup
+          legend={f.cookTime}
+          name="maxCook"
+          type="radio"
+          options={[
+            { value: '', label: f.cookTimeAny },
+            ...cookTimeSteps.map((m) => ({
+              value: String(m),
+              label: fmt(f.cookTimeUpTo, { n: m }),
+              count: count((r) => r.cookMinutes <= m),
+            })),
+          ]}
+        />
+        <input type="hidden" name="maxTotal" value="" />
+
+        <div class="sticky bottom-0 mt-6 flex gap-2 bg-canvas pt-4 pb-1">
+          <button type="reset" class="btn btn-outline flex-1" data-clear-filters>{t.recipes.clearAll}</button>
+          <button type="submit" class="btn btn-primary flex-1 lg:hidden" data-apply-filters>{f.apply}</button>
+        </div>
+      </form>
+    </aside>
+
+    <section aria-labelledby="results-title" class="min-w-0">
+      <h2 id="results-title" class="sr-only">{t.meta.recipesTitle}</h2>
+
+      <div class="flex flex-wrap items-center gap-3 border-b border-line pb-4">
+        <button type="button" class="btn btn-outline lg:hidden" popovertarget="filter-panel">
+          <Icon name="filter" size={18} />
+          {f.open}
+          <span class="rounded-pill bg-gold px-2 text-xs text-gold-contrast empty:hidden" data-filter-count></span>
+        </button>
+        <p class="text-sm text-ink-muted" role="status" data-results-status>
+          {fmt(t.recipes.matchingAll, { shown: Math.min(pageSize, total), count: total })}
+        </p>
+        <div class="ml-auto flex items-center gap-2">
+          <label for="recipe-sort" class="text-sm font-semibold whitespace-nowrap">{t.recipes.sort.label}</label>
+          <select id="recipe-sort" name="sort" form="recipe-filters" class="field w-auto rounded-pill pr-8">
+            <option value="newest">{t.recipes.sort.newest}</option>
+            <option value="popular">{t.recipes.sort.popular}</option>
+            <option value="rating">{t.recipes.sort.rating}</option>
+            <option value="fastest">{t.recipes.sort.fastest}</option>
+            <option value="alpha">{t.recipes.sort.alpha}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2" data-active-filters hidden>
+        <h3 class="text-mono-meta text-ink-muted uppercase">{t.recipes.activeFilters}:</h3>
+        <ul class="flex flex-wrap gap-2" data-chips></ul>
+        <button type="button" class="text-sm font-semibold text-gold-strong underline" data-clear-filters>
+          {t.recipes.clearAll}
+        </button>
+      </div>
+
+      <ul class="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3" role="list" data-results>
+        {
+          recipes.map((r, i) => (
+            <li
+              data-slug={r.slug}
+              data-category={r.categories.join(' ')}
+              data-cuisine={r.cuisines.join(' ')}
+              data-prep={r.prepBucket}
+              data-difficulty={r.difficulty}
+              data-diet={r.diets.join(' ')}
+              data-ingredient={r.mainIngredients.join(' ')}
+              data-rating={r.rating.value}
+              data-cook={r.cookMinutes}
+              data-total={r.totalMinutes}
+              data-prep-minutes={r.prepMinutes}
+              data-popularity={r.popularity}
+              data-date={r.datePublished}
+              data-title={r.t.title}
+              data-search={haystack(r)}
+              hidden={i >= pageSize}
+            >
+              <RecipeCard recipe={r} locale={locale} eager={i < 3} />
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="py-16 text-center" data-empty hidden>
+        <p class="font-serif text-5xl" aria-hidden="true">🍳</p>
+        <h3 class="mt-4 font-serif text-3xl font-bold">{t.recipes.empty.title}</h3>
+        <p class="mx-auto mt-2 max-w-md text-ink-muted">{t.recipes.empty.body}</p>
+        <button type="button" class="btn btn-primary mt-6" data-clear-filters>{t.recipes.empty.reset}</button>
+      </div>
+
+      <div class="mt-10 text-center">
+        <button type="button" class="btn btn-outline btn-lg" data-load-more hidden={total <= pageSize}>
+          {t.recipes.loadMore}
+        </button>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  @media (min-width: 64rem) {
+    /* Desktop: the popover is just a sticky sidebar. */
+    .filter-panel {
+      display: block;
+      position: sticky;
+      inset-block-start: calc(var(--layout-header-height) + var(--space-md));
+      align-self: start;
+      max-block-size: calc(100dvh - var(--layout-header-height) - var(--space-xl));
+      overflow-y: auto;
+      /*
+        The sidebar scrolls, and a scroll container clips anything painted
+        outside it — including the focus outline of the first-column
+        checkboxes. Reserve room for the ring, then pull the panel back by the
+        same amount so its content stays aligned with the page grid.
+      */
+      --ring-room: calc(var(--focus-ring-width) + var(--focus-ring-offset) + 2px);
+      margin: calc(-1 * var(--ring-room)) 0 0 calc(-1 * var(--ring-room));
+      padding: var(--ring-room) var(--space-xs) var(--ring-room) var(--ring-room);
+      inline-size: auto;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      scrollbar-width: thin;
+    }
+  }
+
+  @media (max-width: 63.999rem) {
+    .filter-panel:popover-open {
+      position: fixed;
+      inset: 0 auto 0 0;
+      margin: 0;
+      inline-size: min(24rem, 92vw);
+      block-size: 100dvh;
+      max-block-size: none;
+      padding: var(--space-md);
+      overflow-y: auto;
+      border: 0;
+      border-inline-end: 1px solid var(--color-border);
+      background: var(--color-background);
+      color: var(--color-text-primary);
+      box-shadow: var(--shadow-lifted);
+    }
+    .filter-panel::backdrop {
+      background: var(--color-overlay);
+    }
+  }
+</style>
+
+<script>
+  import { initRecipeBrowser } from '../../../scripts/filters';
+  initRecipeBrowser();
+</script>

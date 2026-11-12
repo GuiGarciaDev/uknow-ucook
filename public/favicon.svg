@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>.bg{fill:#D4AF37}.fg{fill:#FFFFF0}.ln{stroke:#D4AF37}@media (prefers-color-scheme:dark){.bg{fill:#B99A4B}.fg{fill:#1F1B16}.ln{stroke:#B99A4B}}</style>
+  <circle class="bg" cx="32" cy="32" r="30"/>
+  <path class="fg" d="M20 22c0-4 3.5-7 7.5-6.5C29 12 35 11 38 14.5c4-1.5 8.5 1.5 8 6 3 1.5 3.5 6.5-.5 8.5H20.5C16.5 27 17 22.5 20 22Z"/>
+  <path class="fg" d="M22 31h22v13a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4Z"/>
+  <path class="ln" d="M27 36v6M33 36v6M39 36v6" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

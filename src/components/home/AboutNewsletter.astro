@@ -1,0 +1,73 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const t = useTranslations(Astro.props.locale).home;
+---
+
+<div class="shell grid gap-8 py-(--space-3xl) lg:grid-cols-2">
+  <section id="about" aria-labelledby="about-title" class="scroll-mt-24">
+    <p class="kicker">{t.about.kicker}</p>
+    <h2 id="about-title" class="section-title mt-3">{t.about.title}</h2>
+    {t.about.body.map((p) => <p class="mt-4 max-w-xl text-lg text-ink-muted">{p}</p>)}
+  </section>
+
+  <section aria-labelledby="newsletter-title" class="newsletter relative overflow-hidden rounded-xl p-8 md:p-10">
+    <p class="kicker">{t.newsletter.kicker}</p>
+    <h2 id="newsletter-title" class="mt-3 font-serif text-3xl font-bold md:text-4xl">{t.newsletter.title}</h2>
+    <p class="mt-3 max-w-md">{t.newsletter.intro}</p>
+
+    <!--
+      This site is a static mock with no backend, so subscribing can never work.
+      The form is shown for the design but disabled (a disabled fieldset disables
+      every control in it and removes them from the tab order).
+    -->
+    <form class="mt-6" aria-describedby="newsletter-unavailable" onsubmit="return false">
+      <fieldset disabled class="flex flex-col gap-3 sm:flex-row">
+        <legend class="sr-only">{t.newsletter.title}</legend>
+        <div class="flex-1">
+          <label for="newsletter-email" class="sr-only">{t.newsletter.emailLabel}</label>
+          <input
+            id="newsletter-email"
+            name="email"
+            type="email"
+            autocomplete="off"
+            placeholder={t.newsletter.placeholder}
+            class="field rounded-pill disabled:cursor-not-allowed disabled:opacity-60"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50">
+          {t.newsletter.submit}
+          <Icon name="arrowRight" size={16} />
+        </button>
+      </fieldset>
+    </form>
+    <p id="newsletter-unavailable" class="mt-3 flex items-center gap-2 text-sm font-semibold">
+      <Icon name="info" size={16} />
+      {t.newsletter.unavailable}
+    </p>
+  </section>
+</div>
+
+<style>
+  .newsletter {
+    background: var(--color-surface-muted);
+    color: var(--color-text-primary);
+  }
+  .newsletter::after {
+    content: '';
+    position: absolute;
+    inset-block-start: -4rem;
+    inset-inline-end: -4rem;
+    inline-size: 12rem;
+    aspect-ratio: 1;
+    border: 1.5rem solid var(--color-accent);
+    border-radius: 50%;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+</style>

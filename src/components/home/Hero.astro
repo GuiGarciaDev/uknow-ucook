@@ -1,0 +1,170 @@
+---
+import { Picture } from 'astro:assets';
+import Icon from '../ui/Icon.astro';
+import Rating from '../ui/Rating.astro';
+import { siteConfig } from '../../config/site';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { formatMinutes, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  cover: Recipe;
+  slugs: string[];
+}
+const { locale, cover, slugs } = Astro.props;
+const t = useTranslations(locale).home.hero;
+const recipeBase = localizePath(locale, '/recipes');
+const coverHref = `${recipeBase}/${cover.slug}`;
+---
+
+<section aria-labelledby="hero-title" class="relative overflow-hidden">
+  <div class="hero-wash" aria-hidden="true"></div>
+  <div class="shell relative grid items-center gap-12 pt-10 pb-16 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-16 lg:pb-24">
+    <div class="reveal">
+      <p class="kicker">{t.kicker}</p>
+      <h1 id="hero-title" class="display mt-6 text-hero text-ink">
+        {t.titleStart}{' '}<em class="font-serif text-gold-strong italic">{t.titleEmphasis}</em>{' '}<span class="block">{t.titleEnd}</span>
+      </h1>
+      <p class="mt-6 max-w-xl text-lead text-ink-muted">{t.intro}</p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a href={recipeBase} class="btn btn-primary btn-lg">
+          {t.ctaExplore}
+          <Icon name="arrowRight" size={18} />
+        </a>
+        <!-- A real link (works without JS); surprise.ts swaps in a random recipe. -->
+        <a
+          href={coverHref}
+          class="btn btn-outline btn-lg"
+          data-surprise={JSON.stringify(slugs)}
+          data-surprise-base={recipeBase}
+          title={t.surpriseHint}
+        >
+          <Icon name="shuffle" size={18} />
+          {t.ctaSurprise}
+        </a>
+      </div>
+
+      <dl class="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-6">
+        {
+          t.stats.map((s) => (
+            <div class="flex flex-col-reverse gap-1">
+              <dt class="text-xs leading-snug text-ink-muted">{s.label}</dt>
+              <dd class="font-serif text-4xl font-bold text-ink">{s.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <figure class="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div class="hero-frame relative aspect-portrait overflow-hidden shadow-float">
+        <Picture
+          src={cover.t.images.hero.src}
+          alt={cover.t.images.hero.alt}
+          formats={['avif', 'webp']}
+          widths={[480, 720, 960, 1280]}
+          sizes="(min-width: 64rem) 46vw, 92vw"
+          quality={siteConfig.images.quality}
+          loading="eager"
+          fetchpriority="high"
+          class="h-full w-full object-cover"
+        />
+      </div>
+
+      <p class="sticker" aria-hidden="true">
+        <span>{t.sticker}</span>
+      </p>
+
+      <figcaption class="card-surface absolute right-4 -bottom-6 left-4 flex items-center gap-4 p-4 sm:right-auto sm:-left-6 sm:max-w-xs">
+        <span class="grid size-12 shrink-0 place-items-center rounded-full bg-gold text-gold-contrast">
+          <Icon name="chef" size={24} />
+        </span>
+        <span class="min-w-0">
+          <a href={coverHref} class="block truncate font-serif text-lg font-bold no-underline hover:underline">{cover.t.title}</a>
+          <span class="mt-0.5 flex items-center gap-3 text-xs text-ink-muted">
+            <span>{formatMinutes(cover.totalMinutes, locale)}</span>
+            <Rating value={cover.rating.value} locale={locale} />
+          </span>
+        </span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .hero-wash {
+    position: absolute;
+    inset: 0 0 auto 0;
+    block-size: 85%;
+    background:
+      radial-gradient(60% 60% at 85% 30%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 70%),
+      radial-gradient(40% 50% at 10% 10%, color-mix(in srgb, var(--color-surface-muted) 70%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-frame {
+    border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+    outline: 1px solid var(--color-border-strong);
+    outline-offset: 10px;
+  }
+
+  .sticker {
+    position: absolute;
+    inset-block-start: 6%;
+    inset-inline-end: -2%;
+    display: grid;
+    place-items: center;
+    inline-size: 7.5rem;
+    aspect-ratio: 1;
+    padding: var(--space-xs);
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font-family: var(--font-display);
+    font-weight: var(--weight-bold);
+    font-style: italic;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    text-align: center;
+    transform: rotate(12deg);
+    box-shadow: var(--shadow-lifted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sticker {
+      animation: wobble 6s ease-in-out infinite;
+    }
+    .reveal {
+      animation: rise var(--transition-slow) both;
+    }
+  }
+
+  @keyframes wobble {
+    50% {
+      transform: rotate(4deg) scale(1.03);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(var(--motion-reveal-distance));
+    }
+  }
+</style>
+
+<script>
+  // "Surprise me": pick a random recipe at click time (the href is a sensible no-JS default).
+  document.querySelectorAll<HTMLAnchorElement>('a[data-surprise]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const slugs: string[] = JSON.parse(link.dataset.surprise ?? '[]');
+      if (!slugs.length) return;
+      event.preventDefault();
+      const slug = slugs[Math.floor(Math.random() * slugs.length)];
+      window.location.href = `${link.dataset.surpriseBase}/${slug}`;
+    });
+  });
+</script>

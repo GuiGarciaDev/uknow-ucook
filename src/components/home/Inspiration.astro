@@ -1,0 +1,57 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import Icon from '../ui/Icon.astro';
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const t = useTranslations(Astro.props.locale).home.inspiration;
+---
+
+<section aria-labelledby="inspiration-title" class="border-y border-line bg-sunken py-(--space-3xl)">
+  <div class="shell">
+    <SectionHeading id="inspiration-title" kicker={t.kicker} title={t.title} intro={t.intro} />
+
+    <div class="grid gap-10 lg:grid-cols-[2fr_1fr]">
+      <ol class="grid gap-6 md:grid-cols-3" role="list">
+        {
+          t.tips.map((tip, i) => (
+            <li class="card-surface flex flex-col p-6">
+              <span class="font-mono text-xs font-bold tracking-widest text-gold-strong">
+                TIP_{String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 class="mt-3 font-serif text-xl leading-snug font-bold">{tip.title}</h3>
+              <p class="mt-2 text-sm text-ink-muted">{tip.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+
+      <aside aria-labelledby="seasonal-title" class="card-surface p-6">
+        <h3 id="seasonal-title" class="flex items-center gap-2 font-serif text-xl font-bold">
+          <Icon name="leaf" class="text-herb" />
+          {t.seasonalTitle}
+        </h3>
+        <dl class="mt-4 divide-y divide-line">
+          {
+            t.seasonal.map((s) => (
+              <div class="py-3">
+                <dt class="font-semibold">{s.name}</dt>
+                <dd class="text-sm text-ink-muted">{s.note}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </aside>
+    </div>
+
+    <figure class="mx-auto mt-16 max-w-3xl text-center">
+      <blockquote class="font-serif text-3xl leading-snug text-balance italic md:text-4xl">
+        <p>“{t.quoteText}”</p>
+      </blockquote>
+      <figcaption class="mt-4 text-sm text-ink-muted">— <cite class="not-italic">{t.quoteAuthor}</cite></figcaption>
+    </figure>
+  </div>
+</section>

@@ -1,0 +1,32 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  id: string;
+  class?: string;
+}
+const { locale, id, class: className } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<!-- Works without JS: a plain GET form to the discovery page (?q=…). -->
+<search class={className}>
+  <form action={localizePath(locale, '/recipes')} method="get" class="relative">
+    <label for={id} class="sr-only">{t.search.label}</label>
+    <Icon name="search" size={18} class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted" />
+    <input
+      id={id}
+      name="q"
+      type="search"
+      class="field truncate rounded-pill pl-9 text-sm placeholder:truncate"
+      placeholder={t.search.placeholder}
+      autocomplete="off"
+      enterkeyhint="search"
+    />
+    <button type="submit" class="sr-only">{t.search.submit}</button>
+  </form>
+</search>

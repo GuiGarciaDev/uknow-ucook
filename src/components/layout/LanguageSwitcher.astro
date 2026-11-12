@@ -1,0 +1,74 @@
+---
+import { localeMeta, locales, type Locale } from '../../i18n/config';
+import { switchLocalePath } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  /** Current pathname, so switching keeps the visitor on the same page. */
+  pathname: string;
+  variant?: 'compact' | 'full';
+}
+const { locale, pathname, variant = 'compact' } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<nav aria-label={t.a11y.languageNav}>
+  <ul class:list={['flex items-center', variant === 'compact' ? 'gap-0.5 rounded-pill border border-line-strong p-0.5' : 'flex-wrap gap-2']}>
+    {
+      locales.map((l) => {
+        const current = l === locale;
+        return (
+          <li>
+            <a
+              href={switchLocalePath(pathname, l)}
+              hreflang={localeMeta[l].htmlLang}
+              lang={localeMeta[l].htmlLang}
+              data-locale-link={l}
+              aria-current={current ? 'true' : undefined}
+              style={current ? `--flag: url('${localeMeta[l].flag}')` : undefined}
+              class:list={[
+                'inline-flex items-center justify-center no-underline transition-colors',
+                variant === 'compact'
+                  ? 'h-8 min-w-10 rounded-pill px-2.5 text-xs font-bold tracking-wide'
+                  : 'chip hover:border-ink',
+                current ? 'lang-current text-ink' : 'text-ink-muted hover:text-ink',
+              ]}
+            >
+              {variant === 'compact' ? (
+                <>
+                  <span aria-hidden="true">{localeMeta[l].short}</span>
+                  <span class="sr-only">{localeMeta[l].nativeName}</span>
+                </>
+              ) : (
+                localeMeta[l].nativeName
+              )}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</nav>
+
+<style>
+  /* Active language: its flag sits behind the label at reduced opacity. */
+  .lang-current {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-color: var(--color-border-strong);
+    font-weight: var(--weight-bold);
+    text-shadow:
+      0 0 2px var(--color-background),
+      0 0 4px var(--color-background);
+  }
+  .lang-current::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--flag) center / cover no-repeat;
+    opacity: 0.6;
+  }
+</style>

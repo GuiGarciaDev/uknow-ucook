@@ -1,0 +1,571 @@
+/*
+ * Global stylesheet. Every colour, font, radius, shadow and duration comes
+ * from tokens.css (generated from src/config/site.ts). No raw values for
+ * design decisions live here.
+ */
+@import 'tailwindcss';
+@import './tokens.css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--layout-header-height) + var(--space-sm));
+    background: var(--color-background);
+    hanging-punctuation: first;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition:
+      background-color var(--transition-base),
+      color var(--transition-base);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  img,
+  picture,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  img {
+    height: auto;
+  }
+
+  /* <picture> is only a source switcher: let the <img> size against the frame. */
+  picture {
+    display: contents;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-sm);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  /* Honour reduced-motion everywhere, including Tailwind transitions. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Components                                                          */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: var(--layout-max-width);
+    margin-inline: auto;
+    padding-inline: var(--layout-gutter);
+  }
+
+  .shell-content {
+    width: 100%;
+    max-width: calc(var(--layout-content-width) + 2 * var(--layout-gutter));
+    margin-inline: auto;
+    padding-inline: var(--layout-gutter);
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-accent-strong);
+  }
+
+  .kicker::before {
+    content: '';
+    inline-size: 1.75rem;
+    block-size: 1px;
+    background: currentColor;
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-tighter);
+    line-height: var(--leading-tight);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-fluid-section);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+
+  /* Buttons — native <button> or <a>, same look. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    min-block-size: var(--button-height-md);
+    padding-inline: var(--space-md);
+    border: 1px solid transparent;
+    border-radius: var(--radius-button);
+    font-family: var(--font-heading);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast),
+      transform var(--transition-fast),
+      box-shadow var(--transition-fast);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-lg {
+    min-block-size: var(--button-height-lg);
+    padding-inline: var(--space-lg);
+    font-size: var(--text-base);
+  }
+
+  .btn-sm {
+    min-block-size: var(--button-height-sm);
+    padding-inline: var(--space-sm);
+    font-size: var(--text-xs);
+  }
+
+  .btn-primary {
+    background: var(--color-text-primary);
+    color: var(--color-background);
+  }
+
+  .btn-primary:hover {
+    background: var(--color-accent-strong);
+  }
+
+  .btn-gold {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  .btn-gold:hover {
+    box-shadow: var(--shadow-card);
+    filter: brightness(1.05);
+  }
+
+  .btn-outline {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+    background: transparent;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--color-text-primary);
+    background: var(--color-surface);
+  }
+
+  .btn-icon {
+    inline-size: var(--button-height-md);
+    padding: 0;
+  }
+
+  .btn[aria-pressed='true'] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    padding: var(--space-3xs) var(--space-xs);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-chip);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-normal);
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+  }
+
+  .field {
+    inline-size: 100%;
+    min-block-size: var(--input-height);
+    padding-inline: var(--space-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-input);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-sm);
+    transition: border-color var(--transition-fast);
+  }
+
+  .field::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.8;
+  }
+
+  .field:hover {
+    border-color: var(--color-text-secondary);
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--color-accent-strong);
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+  }
+
+  .card-surface {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .media-zoom {
+    transition: transform var(--transition-slow);
+  }
+
+  .group:hover .media-zoom,
+  .group:focus-within .media-zoom {
+    transform: scale(var(--motion-hover-scale));
+  }
+
+  /* Stretch a card's main link over the whole card (one tab stop). */
+  .stretched-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+
+  .rule-ornament {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--color-accent);
+  }
+
+  .rule-ornament::before,
+  .rule-ornament::after {
+    content: '';
+    flex: 1;
+    block-size: 1px;
+    background: var(--color-border-strong);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* "Rendered Markdown" — the recipe detail reading experience          */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .md {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-primary);
+  }
+
+  .md > * + * {
+    margin-block-start: var(--space-md);
+  }
+
+  .md h2 {
+    position: relative;
+    margin-block-start: var(--space-2xl);
+    padding-block-end: var(--space-xs);
+    border-block-end: 1px solid var(--color-border);
+    font-family: var(--font-display);
+    font-size: var(--text-fluid-section);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  /* The "##" marker — a wink to the Markdown source. */
+  .md h2::before {
+    content: '##';
+    position: absolute;
+    inset-inline-end: 100%;
+    margin-inline-end: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.55em;
+    font-weight: var(--weight-regular);
+    line-height: 2.2;
+    color: var(--color-accent);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+
+  @media (min-width: 72rem) {
+    .md h2::before {
+      opacity: 0.9;
+    }
+  }
+
+  /* Plain h3s only; components style their own headings. */
+  .md h3:not([class]) {
+    margin-block-start: var(--space-lg);
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+  }
+
+  .md h3:not([class])::before {
+    content: '### ';
+    font-family: var(--font-mono);
+    font-size: 0.7em;
+    font-weight: var(--weight-regular);
+    color: var(--color-accent-strong);
+  }
+
+  .md a:not(.btn) {
+    color: var(--color-accent-strong);
+    text-decoration-color: var(--color-accent);
+  }
+
+  .md a:not(.btn):hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .md code,
+  .md kbd {
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .md hr {
+    margin-block: var(--space-xl);
+    border: 0;
+    border-block-start: 1px dashed var(--color-border-strong);
+  }
+
+  /* Unordered lists: gold em-dash bullets, like a tidy README. */
+  .md ul.md-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .md ul.md-list > li {
+    position: relative;
+    padding-inline-start: var(--space-md);
+  }
+
+  .md ul.md-list > li + li {
+    margin-block-start: var(--space-2xs);
+  }
+
+  .md ul.md-list > li::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0.15em;
+    inset-block-start: 0.8em;
+    inline-size: 0.6em;
+    block-size: 2px;
+    border-radius: 2px;
+    background: var(--color-accent);
+  }
+
+  .md blockquote {
+    padding: var(--space-sm) var(--space-md);
+    border-inline-start: 3px solid var(--color-accent);
+    background: var(--color-surface-sunken);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+  }
+
+  .md figure figcaption {
+    margin-block-start: var(--space-xs);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-text-secondary);
+  }
+
+  /* GitHub-style admonitions, adapted for the kitchen. */
+  .callout {
+    --callout-fg: var(--color-accent-strong);
+    --callout-bg: var(--color-surface-sunken);
+    position: relative;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid color-mix(in srgb, var(--callout-fg) 25%, transparent);
+    border-inline-start-width: 4px;
+    border-inline-start-color: var(--callout-fg);
+    border-radius: var(--radius-md);
+    background: var(--callout-bg);
+    font-size: var(--text-base);
+  }
+
+  .callout-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    margin-block-end: var(--space-3xs);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--callout-fg);
+  }
+
+  .callout[data-type='chef'] {
+    --callout-fg: var(--color-accent-strong);
+    --callout-bg: color-mix(in srgb, var(--color-surface-muted) 55%, var(--color-background));
+  }
+
+  .callout[data-type='mistake'],
+  .callout[data-type='warning'] {
+    --callout-fg: var(--color-warning);
+    --callout-bg: var(--color-warning-surface);
+  }
+
+  .callout[data-type='substitution'] {
+    --callout-fg: var(--color-tip);
+    --callout-bg: var(--color-tip-surface);
+  }
+
+  .callout[data-type='storage'] {
+    --callout-fg: var(--color-info);
+    --callout-bg: var(--color-info-surface);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Utilities                                                           */
+/* ------------------------------------------------------------------ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility text-mono-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ------------------------------------------------------------------ */
+/* Print: just the recipe, ink-friendly                                */
+/* ------------------------------------------------------------------ */
+@media print {
+  :root,
+  :root[data-theme='dark'] {
+    --color-background: #fff;
+    --color-surface: #fff;
+    --color-surface-sunken: #fff;
+    --color-surface-muted: #fff;
+    --color-text-primary: #000;
+    --color-text-secondary: #333;
+    --color-border: #bbb;
+    --color-border-strong: #888;
+    --shadow-card: none;
+  }
+
+  [data-print='hide'],
+  header[data-site-header],
+  footer[data-site-footer],
+  .skip-link {
+    display: none !important;
+  }
+
+  body {
+    font-size: 11pt;
+  }
+
+  .md {
+    font-size: 11pt;
+  }
+
+  .md h2::before {
+    display: none;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  figure,
+  .callout,
+  li {
+    break-inside: avoid;
+  }
+
+  img {
+    max-height: 9cm;
+    object-fit: cover;
+  }
+}

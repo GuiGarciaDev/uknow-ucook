@@ -1,0 +1,73 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section id="faq" aria-labelledby="faq-title" class="scroll-mt-28">
+  <h2 id="faq-title">{t.recipe.sections.faq}</h2>
+  <div class="faq">
+    {
+      recipe.t.faq.map((f, i) => (
+        <details name="recipe-faq" open={i === 0}>
+          <summary>
+            <span>{f.question}</span>
+            <Icon name="plus" size={18} class="faq-icon" />
+          </summary>
+          <p>{f.answer}</p>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .faq {
+    border-block-start: 1px solid var(--color-border);
+  }
+  details {
+    border-block-end: 1px solid var(--color-border);
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-3xs);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover {
+    color: var(--color-accent-strong);
+  }
+  details[open] .faq-icon {
+    transform: rotate(45deg);
+  }
+  .faq-icon {
+    transition: transform var(--transition-base);
+    color: var(--color-accent-strong);
+  }
+  details p {
+    margin: 0;
+    padding: 0 var(--space-3xs) var(--space-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
+  }
+  @media print {
+    details:not([open]) p {
+      display: block;
+    }
+  }
+</style>

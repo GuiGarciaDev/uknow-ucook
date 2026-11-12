@@ -1,0 +1,151 @@
+---
+/**
+ * Ingredients: grouped Markdown-style lists with native checkboxes and a
+ * servings adjuster. Quantities live in <data value> so the client script
+ * can rescale them; the initial text is rendered by the same formatter.
+ */
+import Icon from '../ui/Icon.astro';
+import PhotoFigure from './PhotoFigure.astro';
+import { siteConfig } from '../../config/site';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { fmt, useTranslations } from '../../i18n/translations';
+import { formatQuantity } from '../../lib/quantity';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+const s = t.recipe.servings;
+const totalItems = recipe.t.ingredientGroups.reduce((n, g) => n + g.items.length, 0);
+const { min, max } = siteConfig.recipes.servings;
+---
+
+<section id="ingredients" aria-labelledby="ingredients-title" class="scroll-mt-28" data-ingredients data-base-servings={recipe.servings} data-locale={locale}>
+  <h2 id="ingredients-title">{t.recipe.sections.ingredients}</h2>
+  {recipe.t.yieldNote && <p class="text-base text-ink-muted">{recipe.t.yieldNote}</p>}
+
+  <div class="servings-bar" data-print="hide">
+    <div class="flex items-center gap-2" role="group" aria-labelledby="servings-label">
+      <label id="servings-label" for="servings-input" class="mr-1 text-sm font-bold">{s.label}</label>
+      <button type="button" class="btn btn-outline btn-icon btn-sm" data-servings-step="-1" aria-label={s.decrease}>
+        <Icon name="minus" size={16} />
+      </button>
+      <input
+        id="servings-input"
+        type="number"
+        inputmode="numeric"
+        min={min}
+        max={max}
+        step="1"
+        value={recipe.servings}
+        class="field w-16 text-center font-mono font-bold"
+        style="min-block-size: var(--button-height-sm)"
+        data-servings-input
+      />
+      <button type="button" class="btn btn-outline btn-icon btn-sm" data-servings-step="1" aria-label={s.increase}>
+        <Icon name="plus" size={16} />
+      </button>
+      <button type="button" class="btn btn-sm ml-1 text-ink-muted underline" data-servings-reset hidden>{s.reset}</button>
+    </div>
+    <p class="text-sm text-ink-muted" data-check-progress data-template={t.recipe.ingredientsProgress} data-total={totalItems}>
+      {fmt(t.recipe.ingredientsProgress, { done: 0, total: totalItems })}
+    </p>
+  </div>
+  <p class="sr-only" role="status" data-servings-status data-template={s.scaledNote}></p>
+  <p class="text-sm text-ink-muted" data-print="hide">{t.recipe.ingredientsHint}</p>
+
+  {
+    recipe.t.ingredientGroups.map((group, g) => (
+      <>
+        <h3 id={`ingredients-${g}`}>{group.title}</h3>
+        <ul class="ingredient-list" aria-labelledby={`ingredients-${g}`}>
+          {group.items.map((item, i) => {
+            const id = `ing-${g}-${i}`;
+            return (
+              <li>
+                <input type="checkbox" id={id} data-ingredient-check />
+                <label for={id}>
+                  {item.amount !== undefined && (
+                    <>
+                      <data class="qty" value={item.amount} data-unit={item.unit ?? ''}>
+                        {formatQuantity(item.amount, item.unit, locale)}
+                      </data>{' '}
+                    </>
+                  )}
+                  <span class="name">{item.name}</span>
+                  {item.note && <span class="note">, {item.note}</span>}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </>
+    ))
+  }
+
+  <PhotoFigure image={recipe.t.images.ingredients} locale={locale} sizes="(min-width: 64rem) 780px, 92vw" widths={[480, 780, 1200, 1560]} frameClass="aspect-cinema" />
+</section>
+
+<style>
+  .servings-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .ingredient-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--color-border);
+  }
+  .ingredient-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-2xs);
+    border-block-end: 1px solid var(--color-border);
+    transition: background-color var(--transition-fast);
+  }
+  .ingredient-list li:hover {
+    background: var(--color-surface-sunken);
+  }
+  .ingredient-list input {
+    margin-block-start: 0.35em;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .ingredient-list label {
+    flex: 1;
+    cursor: pointer;
+    font-size: var(--text-base);
+  }
+  .ingredient-list .qty {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    font-weight: var(--weight-bold);
+    color: var(--color-accent-strong);
+    white-space: nowrap;
+  }
+  .ingredient-list .note {
+    color: var(--color-text-secondary);
+  }
+  .ingredient-list li:has(input:checked) label {
+    color: var(--color-text-secondary);
+    text-decoration: line-through;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 2px;
+  }
+  .ingredient-list li:has(input:checked) .qty {
+    color: inherit;
+  }
+</style>

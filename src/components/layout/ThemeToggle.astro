@@ -1,0 +1,93 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const t = useTranslations(Astro.props.locale);
+---
+
+<!--
+  A toggle button: the accessible name stays constant ("Dark theme") and the
+  state is exposed with aria-pressed, which theme.ts keeps in sync.
+  Visually it shows only the icon of the *current* theme (sun = light,
+  moon = dark); the two icons cross-fade with a spin when it flips.
+-->
+<button
+  type="button"
+  class="theme-toggle btn btn-outline btn-icon"
+  data-theme-toggle
+  aria-pressed="false"
+  aria-label={t.a11y.darkMode}
+  title={t.a11y.darkMode}
+>
+  <span class="theme-icon theme-icon-sun" aria-hidden="true"><Icon name="sun" /></span>
+  <span class="theme-icon theme-icon-moon" aria-hidden="true"><Icon name="moon" /></span>
+</button>
+
+<style>
+  .theme-toggle {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Neutral look in both states: the icon itself communicates the theme. */
+  .theme-toggle[aria-pressed] {
+    background: transparent;
+    color: var(--color-text-primary);
+  }
+  .theme-toggle:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+  }
+
+  .theme-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition:
+      transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 300ms ease;
+  }
+
+  /* Light theme: sun visible, moon parked below and rotated away. */
+  .theme-icon-moon {
+    opacity: 0;
+    transform: translateY(100%) rotate(-90deg) scale(0.5);
+  }
+
+  :global([data-theme='dark']) .theme-icon-sun {
+    opacity: 0;
+    transform: translateY(-100%) rotate(90deg) scale(0.5);
+  }
+  :global([data-theme='dark']) .theme-icon-moon {
+    opacity: 1;
+    transform: none;
+  }
+
+  .theme-toggle:hover .theme-icon-sun {
+    rotate: 45deg;
+  }
+  .theme-toggle:hover .theme-icon-moon {
+    rotate: -15deg;
+  }
+  .theme-icon {
+    transition-property: transform, opacity, rotate;
+  }
+
+  /* No spin on first paint — only once the user actually flips it. */
+  :global(html:not([data-theme-ready])) .theme-icon {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-icon {
+      transition: opacity 150ms ease;
+      transform: none !important;
+      rotate: none !important;
+    }
+  }
+</style>

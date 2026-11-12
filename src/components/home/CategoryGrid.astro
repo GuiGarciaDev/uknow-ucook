@@ -1,0 +1,86 @@
+---
+import { Picture } from 'astro:assets';
+import SectionHeading from './SectionHeading.astro';
+import { siteConfig } from '../../config/site';
+import { categoryTiles } from '../../data/categories';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { fmt, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  recipes: Recipe[];
+}
+const { locale, recipes } = Astro.props;
+const t = useTranslations(locale).home.categories;
+const base = localizePath(locale, '/recipes');
+
+/** Count matches for each tile using the same rules as the filter page. */
+function countFor(query: string): number {
+  const params = new URLSearchParams(query);
+  return recipes.filter((r) => {
+    const c = params.get('category');
+    const d = params.get('diet');
+    const cu = params.get('cuisine');
+    const max = params.get('maxTotal');
+    return (
+      (!c || r.categories.includes(c as Recipe['categories'][number])) &&
+      (!d || r.diets.includes(d as Recipe['diets'][number])) &&
+      (!cu || r.cuisines.includes(cu as Recipe['cuisines'][number])) &&
+      (!max || r.totalMinutes <= Number(max))
+    );
+  }).length;
+}
+
+const tiles = categoryTiles.map((tile) => ({
+  ...tile,
+  count: countFor(tile.query),
+  image: recipes.find((r) => r.slug === tile.imageFrom)?.t.images.hero.src,
+}));
+---
+
+<section aria-labelledby="categories-title" class="bg-card-muted/50 py-(--space-3xl)">
+  <div class="shell">
+    <SectionHeading id="categories-title" kicker={t.kicker} title={t.title} intro={t.intro} />
+    <ul class="grid grid-cols-2 gap-4 md:grid-cols-4" role="list">
+      {
+        tiles.map((tile, i) => (
+          <li class:list={[[0, 5, 6, 7].includes(i) ? 'md:col-span-2' : '']}>
+            <a
+              href={`${base}?${tile.query}`}
+              class="group relative flex aspect-[4/5] items-end overflow-hidden rounded-tile no-underline shadow-tile md:aspect-auto md:h-64"
+            >
+              {tile.image && (
+                <Picture
+                  src={tile.image}
+                  alt=""
+                  formats={['avif', 'webp']}
+                  widths={[320, 640]}
+                  sizes="(min-width: 48rem) 25vw, 50vw"
+                  quality={siteConfig.images.quality}
+                  loading="lazy"
+                  class="media-zoom absolute inset-0 h-full w-full object-cover"
+                />
+              )}
+              <span class="tile-scrim absolute inset-0" aria-hidden="true" />
+              <span class="relative flex w-full flex-col gap-0.5 p-4 text-on-media">
+                <span class="font-serif text-2xl leading-tight font-bold md:text-3xl">{tile.label[locale]}</span>
+                <span class="text-sm opacity-90">{tile.blurb[locale]}</span>
+                <span class="mt-2 text-xs font-semibold tracking-wide uppercase opacity-80">
+                  {tile.count === 0 ? t.countZero : tile.count === 1 ? t.countOne : fmt(t.count, { count: tile.count })}
+                </span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .tile-scrim {
+    background: linear-gradient(to top, var(--color-media-scrim), transparent 65%);
+  }
+</style>

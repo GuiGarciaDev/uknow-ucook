@@ -1,0 +1,99 @@
+---
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { formatNumber, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+const n = t.recipe.nutrition;
+const nut = recipe.nutrition;
+
+// Share of energy from each macro (4/4/9 kcal per gram) for the bar.
+const kcal = { p: nut.protein * 4, c: nut.carbohydrates * 4, f: nut.fat * 9 };
+const sum = kcal.p + kcal.c + kcal.f || 1;
+const pct = (v: number) => `${Math.round((v / sum) * 100)}%`;
+
+const rows = [
+  { label: n.calories, value: `${formatNumber(nut.calories, locale, 0)} kcal` },
+  { label: n.protein, value: `${formatNumber(nut.protein, locale)} g`, swatch: 'p' },
+  { label: n.carbohydrates, value: `${formatNumber(nut.carbohydrates, locale)} g`, swatch: 'c' },
+  { label: n.fat, value: `${formatNumber(nut.fat, locale)} g`, swatch: 'f' },
+  { label: n.fiber, value: `${formatNumber(nut.fiber, locale)} g` },
+  { label: n.sodium, value: `${formatNumber(nut.sodium, locale, 0)} mg` },
+];
+---
+
+<section id="nutrition" aria-labelledby="nutrition-title" class="scroll-mt-28">
+  <h2 id="nutrition-title">{t.recipe.sections.nutrition}</h2>
+
+  <div class="macro-bar" aria-hidden="true">
+    <span class="bg-gold" style={`inline-size:${pct(kcal.p)}`}></span>
+    <span class="bg-herb" style={`inline-size:${pct(kcal.c)}`}></span>
+    <span class="bg-chili" style={`inline-size:${pct(kcal.f)}`}></span>
+  </div>
+
+  <table class="nutrition">
+    <caption class="sr-only">{n.caption}</caption>
+    <thead class="sr-only">
+      <tr><th scope="col">{n.nutrient}</th><th scope="col">{n.amount}</th></tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((r) => (
+          <tr>
+            <th scope="row">
+              {r.swatch && (
+                <span
+                  aria-hidden="true"
+                  class:list={['mr-2 inline-block size-2.5 rounded-full', { p: 'bg-gold', c: 'bg-herb', f: 'bg-chili' }[r.swatch]]}
+                />
+              )}
+              {r.label}
+            </th>
+            <td>{r.value}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="text-sm text-ink-muted">{n.disclaimer}</p>
+</section>
+
+<style>
+  .macro-bar {
+    display: flex;
+    block-size: 0.6rem;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
+  }
+  .nutrition {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+  }
+  .nutrition th,
+  .nutrition td {
+    padding: var(--space-xs) 0;
+    border-block-end: 1px solid var(--color-border);
+    text-align: start;
+  }
+  .nutrition th {
+    font-weight: var(--weight-medium);
+  }
+  .nutrition td {
+    text-align: end;
+    font-family: var(--font-mono);
+    font-weight: var(--weight-bold);
+  }
+  .nutrition tbody tr:first-child th,
+  .nutrition tbody tr:first-child td {
+    font-size: var(--text-xl);
+    border-block-end-width: 3px;
+    border-block-end-color: var(--color-text-primary);
+  }
+</style>

@@ -1,0 +1,55 @@
+---
+/**
+ * Recipe page chrome: BaseLayout + reading-progress bar + the recipe's
+ * client interactions (servings, checklist, copy, save, print, TOC spy).
+ */
+import BaseLayout from './BaseLayout.astro';
+import type { SeoProps } from '../components/layout/SeoHead.astro';
+
+type Props = SeoProps;
+---
+
+<BaseLayout {...Astro.props} type="article">
+  <!-- Pure-CSS reading progress (scroll-driven animation); decorative. -->
+  <div class="reading-progress" aria-hidden="true" data-print="hide"></div>
+  <slot />
+</BaseLayout>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 60;
+    block-size: 3px;
+    background: var(--color-accent);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .reading-progress {
+      display: block;
+      animation: grow linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  @keyframes grow {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reading-progress {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { initRecipeInteractions } from '../scripts/recipe-interactions';
+  initRecipeInteractions();
+</script>

@@ -1,0 +1,163 @@
+---
+import Icon from '../ui/Icon.astro';
+import PhotoFigure from './PhotoFigure.astro';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { fmt, formatMinutes, isoDuration, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+const finalInSteps = recipe.t.steps.some((s) => s.image === 'finalDish');
+---
+
+<section id="instructions" aria-labelledby="instructions-title" class="scroll-mt-28">
+  <h2 id="instructions-title">{t.recipe.sections.instructions}</h2>
+
+  <ol class="steps">
+    {
+      recipe.t.steps.map((step, i) => (
+        <li id={`step-${i + 1}`} class="step">
+          <h3 class="step-title">
+            <span class="step-number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span class="sr-only">{fmt(t.recipe.step, { n: i + 1 })}: </span>
+            {step.title}
+          </h3>
+          {step.minutes !== undefined && (
+            <p class="step-time">
+              <Icon name="clock" size={14} />
+              <time datetime={isoDuration(step.minutes)}>{fmt(t.recipe.stepTime, { t: formatMinutes(step.minutes, locale) })}</time>
+            </p>
+          )}
+          <p>{step.body}</p>
+          {step.tip && (
+            <aside class="callout" data-type="chef" aria-label={t.recipe.stepTip}>
+              <p class="callout-title" aria-hidden="true">
+                <Icon name="chef" size={14} /> {t.recipe.stepTip}
+              </p>
+              <p>{step.tip}</p>
+            </aside>
+          )}
+          {step.image && step.image !== 'hero' && (
+            <PhotoFigure
+              image={recipe.t.images[step.image]}
+              locale={locale}
+              sizes="(min-width: 64rem) 700px, 88vw"
+              widths={[480, 720, 1080, 1400]}
+              frameClass="aspect-photo"
+              class="mt-4"
+            />
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  {
+    !finalInSteps && (
+      <>
+        <h3>{t.recipe.payoff}</h3>
+        <PhotoFigure image={recipe.t.images.finalDish} locale={locale} sizes="(min-width: 64rem) 780px, 92vw" />
+      </>
+    )
+  }
+</section>
+
+<style>
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+  .step {
+    position: relative;
+    padding-block: var(--space-md);
+    padding-inline-start: calc(var(--space-xl) + var(--space-xs));
+    border-block-end: 1px dashed var(--color-border-strong);
+  }
+  .step:last-child {
+    border-block-end: 0;
+  }
+  /* Vertical "timeline" thread linking the step numbers. */
+  .step::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--space-md) - 1px);
+    inline-size: 2px;
+    background: linear-gradient(var(--color-border-strong), var(--color-border-strong)) no-repeat center / 2px 100%;
+    opacity: 0.6;
+  }
+  .step:first-child::before {
+    inset-block-start: var(--space-xl);
+  }
+  .step:last-child::before {
+    inset-block-end: auto;
+    block-size: var(--space-xl);
+  }
+  .step > * + * {
+    margin-block-start: var(--space-xs);
+  }
+  .step-title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+  }
+  .step-number {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: var(--space-md);
+    display: grid;
+    place-items: center;
+    inline-size: var(--space-xl);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--color-text-primary);
+    color: var(--color-background);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    z-index: 1;
+  }
+  .step-time {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    padding: 0.1rem var(--space-xs);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-primary);
+  }
+
+  /*
+    Phones: the number column + timeline costs too much width. Put the number
+    inline before the title and let the step body use the full measure.
+  */
+  @media (max-width: 39.999rem) {
+    .step {
+      padding-inline-start: 0;
+    }
+    .step::before {
+      display: none;
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: var(--text-lg);
+    }
+    .step-number {
+      position: static;
+      flex: none;
+      inline-size: var(--space-lg);
+      font-size: var(--text-xs);
+    }
+  }
+</style>

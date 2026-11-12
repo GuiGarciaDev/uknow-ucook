@@ -1,0 +1,135 @@
+---
+import type { Locale } from '../../i18n/config';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const t = useTranslations(Astro.props.locale);
+const s = t.recipe.sections;
+const items = [
+  { id: 'ingredients', label: s.ingredients },
+  { id: 'instructions', label: s.instructions },
+  { id: 'tips', label: s.tips },
+  { id: 'substitutions', label: s.substitutions },
+  { id: 'nutrition', label: s.nutrition },
+  { id: 'faq', label: s.faq },
+];
+---
+
+<!--
+  One <nav>, two presentations: a sticky vertical list on desktop, a sticky
+  horizontally-scrolling strip on small screens.
+-->
+<nav aria-labelledby="toc-title" class="toc" data-toc data-print="hide">
+  <h2 id="toc-title" class="toc-title">{t.recipe.toc}</h2>
+  <ol class="toc-list scrollbar-none">
+    {
+      items.map((item, i) => (
+        <li>
+          <a href={`#${item.id}`} data-toc-link={item.id}>
+            <span class="toc-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .toc {
+    position: sticky;
+    inset-block-start: var(--layout-header-height);
+    z-index: 20;
+    margin-inline: calc(var(--layout-gutter) * -1);
+    padding: var(--space-2xs) var(--layout-gutter);
+    border-block-end: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-background) 92%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .toc-title {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .toc-list {
+    display: flex;
+    gap: var(--space-3xs);
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    list-style: none;
+  }
+  .toc-list a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+  }
+  .toc-list a:hover {
+    color: var(--color-text-primary);
+  }
+  .toc-list a[aria-current='true'] {
+    color: var(--color-text-primary);
+    background: var(--color-surface-muted);
+  }
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-accent-strong);
+  }
+
+  @media (min-width: 64rem) {
+    .toc {
+      inset-block-start: calc(var(--layout-header-height) + var(--space-lg));
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      backdrop-filter: none;
+    }
+    .toc-title {
+      position: static;
+      inline-size: auto;
+      block-size: auto;
+      overflow: visible;
+      clip-path: none;
+      margin-block-end: var(--space-sm);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      letter-spacing: var(--tracking-widest);
+      text-transform: uppercase;
+      color: var(--color-text-secondary);
+    }
+    .toc-list {
+      flex-direction: column;
+      gap: 0;
+      overflow: visible;
+      border-inline-start: 1px solid var(--color-border-strong);
+    }
+    .toc-list a {
+      margin-inline-start: -1px;
+      padding: var(--space-2xs) var(--space-sm);
+      border-inline-start: 2px solid transparent;
+      border-radius: 0;
+    }
+    .toc-list a[aria-current='true'] {
+      background: none;
+      border-inline-start-color: var(--color-accent);
+    }
+  }
+</style>

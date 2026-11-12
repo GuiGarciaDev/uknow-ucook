@@ -1,0 +1,136 @@
+---
+/**
+ * The "front-matter" panel: recipe metadata as a <dl>, dressed up like a
+ * code block in a documentation site.
+ */
+import { cuisines, diets, difficulties } from '../../data/categories';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { fmt, formatMinutes, formatNumber, isoDuration, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+}
+const { recipe, locale } = Astro.props;
+const t = useTranslations(locale);
+const m = t.recipe.meta;
+const difficulty = difficulties.find((d) => d.id === recipe.difficulty)?.label[locale];
+const cuisine = recipe.cuisines.map((c) => cuisines.find((x) => x.id === c)?.label[locale]).join(', ');
+const diet = recipe.diets.map((d) => diets.find((x) => x.id === d)?.label[locale]).join(', ');
+const level = { easy: 1, medium: 2, hard: 3 }[recipe.difficulty];
+---
+
+<div class="meta-block not-prose">
+  <div class="meta-bar" aria-hidden="true">
+    <span class="dots"><i></i><i></i><i></i></span>
+    <span class="font-mono text-xs">{t.recipe.metaFile}</span>
+  </div>
+  <dl class="meta-grid">
+    <div>
+      <dt>{m.prep}</dt>
+      <dd><time datetime={isoDuration(recipe.prepMinutes)}>{formatMinutes(recipe.prepMinutes, locale)}</time></dd>
+    </div>
+    <div>
+      <dt>{m.cook}</dt>
+      <dd><time datetime={isoDuration(recipe.cookMinutes)}>{formatMinutes(recipe.cookMinutes, locale)}</time></dd>
+    </div>
+    <div>
+      <dt>{m.total}</dt>
+      <dd><time datetime={isoDuration(recipe.totalMinutes)}>{formatMinutes(recipe.totalMinutes, locale)}</time></dd>
+    </div>
+    <div>
+      <dt>{m.difficulty}</dt>
+      <dd class="flex items-center gap-2">
+        <span class="flex gap-0.5" aria-hidden="true">
+          {[1, 2, 3].map((n) => <span class:list={['h-2.5 w-4 rounded-sm', n <= level ? 'bg-gold' : 'bg-line-strong']} />)}
+        </span>
+        {difficulty}
+      </dd>
+    </div>
+    <div>
+      <dt>{m.servings}</dt>
+      <dd><data value={recipe.servings} data-servings-display>{recipe.servings}</data></dd>
+    </div>
+    <div>
+      <dt>{m.calories}</dt>
+      <dd>{fmt(m.caloriesValue, { n: formatNumber(recipe.nutrition.calories, locale, 0) })}</dd>
+    </div>
+    <div class="sm:col-span-2">
+      <dt>{m.cuisine}</dt>
+      <dd>{cuisine}</dd>
+    </div>
+    {
+      diet && (
+        <div class="sm:col-span-2">
+          <dt>{m.diet}</dt>
+          <dd>{diet}</dd>
+        </div>
+      )
+    }
+  </dl>
+</div>
+
+<style>
+  .meta-block {
+    overflow: hidden;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-sunken);
+    box-shadow: var(--shadow-sm);
+  }
+  .meta-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-2xs) var(--space-sm);
+    border-block-end: 1px solid var(--color-border);
+    background: var(--color-surface-muted);
+    color: var(--color-text-secondary);
+  }
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .dots i {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: 50%;
+    background: var(--color-border-strong);
+  }
+  .dots i:first-child {
+    background: var(--color-accent);
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  @media (min-width: 40rem) {
+    .meta-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .meta-grid > div {
+    padding: var(--space-sm);
+    border-block-end: 1px dashed var(--color-border);
+    border-inline-end: 1px dashed var(--color-border);
+  }
+  .meta-grid dt {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: lowercase;
+    color: var(--color-accent-strong);
+  }
+  .meta-grid dt::after {
+    content: ':';
+  }
+  .meta-grid dd {
+    margin: var(--space-3xs) 0 0;
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+  }
+</style>

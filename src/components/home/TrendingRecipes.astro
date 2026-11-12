@@ -1,0 +1,113 @@
+---
+import { Picture } from 'astro:assets';
+import SectionHeading from './SectionHeading.astro';
+import Rating from '../ui/Rating.astro';
+import { siteConfig } from '../../config/site';
+import { categories } from '../../data/categories';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { formatMinutes, isoDuration, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  recipes: Recipe[];
+}
+const { locale, recipes } = Astro.props;
+const t = useTranslations(locale);
+const [lead, ...rest] = recipes;
+const href = (r: Recipe) => localizePath(locale, `/recipes/${r.slug}`);
+const cat = (r: Recipe) => categories.find((c) => c.id === r.categories[0])?.label[locale];
+---
+
+<section aria-labelledby="trending-title" class="shell py-(--space-3xl)">
+  <SectionHeading id="trending-title" kicker={t.home.trending.kicker} title={t.home.trending.title} intro={t.home.trending.intro} />
+
+  <!-- An ordered list: the ranking itself is meaningful. -->
+  <ol class="grid gap-8 lg:grid-cols-[1.15fr_1fr]" role="list">
+    {
+      lead && (
+        <li class="lg:row-span-4">
+          <article class="group relative h-full">
+            <div class="relative aspect-photo overflow-hidden rounded-tile lg:aspect-auto lg:h-[calc(100%-9rem)]">
+              <Picture
+                src={lead.t.images.finalDish.src}
+                alt={lead.t.images.finalDish.alt}
+                formats={['avif', 'webp']}
+                widths={[640, 960, 1280]}
+                sizes="(min-width: 64rem) 50vw, 92vw"
+                quality={siteConfig.images.quality}
+                loading="lazy"
+                class="media-zoom h-full w-full object-cover"
+              />
+              <span class="rank-badge" aria-hidden="true">01</span>
+            </div>
+            <div class="mt-5">
+              <p class="kicker">{cat(lead)}</p>
+              <h3 class="mt-2 font-serif text-3xl font-bold md:text-4xl">
+                <a href={href(lead)} class="stretched-link no-underline decoration-gold decoration-2 group-hover:underline">
+                  <span class="sr-only">1. </span>{lead.t.title}
+                </a>
+              </h3>
+              <p class="mt-2 line-clamp-2 text-ink-muted">{lead.t.description}</p>
+            </div>
+          </article>
+        </li>
+      )
+    }
+    {
+      rest.map((r, i) => (
+        <li>
+          <article class="group relative grid grid-cols-[auto_6rem_1fr] items-center gap-4 border-b border-line pb-6 sm:grid-cols-[auto_8rem_1fr]">
+            <span class="w-12 font-serif text-4xl font-bold text-gold italic" aria-hidden="true">
+              {String(i + 2).padStart(2, '0')}
+            </span>
+            <div class="aspect-square overflow-hidden rounded-md">
+              <Picture
+                src={r.t.images.hero.src}
+                alt=""
+                formats={['avif', 'webp']}
+                widths={[192, 320]}
+                sizes="8rem"
+                quality={siteConfig.images.quality}
+                loading="lazy"
+                class="media-zoom h-full w-full object-cover"
+              />
+            </div>
+            <div class="min-w-0">
+              <p class="text-mono-meta text-gold-strong uppercase">{cat(r)}</p>
+              <h3 class="mt-1 font-serif text-xl leading-snug font-bold">
+                <a href={href(r)} class="stretched-link no-underline decoration-gold decoration-2 group-hover:underline">
+                  <span class="sr-only">{i + 2}. </span>{r.t.title}
+                </a>
+              </h3>
+              <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+                <time datetime={isoDuration(r.totalMinutes)}>{formatMinutes(r.totalMinutes, locale)}</time>
+                <Rating value={r.rating.value} locale={locale} />
+              </p>
+            </div>
+          </article>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .rank-badge {
+    position: absolute;
+    inset-block-start: var(--space-sm);
+    inset-inline-start: var(--space-sm);
+    display: grid;
+    place-items: center;
+    inline-size: 3.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-xl);
+  }
+</style>

@@ -1,0 +1,42 @@
+---
+/** A <fieldset> of native checkboxes or radios with counts. */
+interface Option {
+  value: string;
+  label: string;
+  count?: number;
+}
+interface Props {
+  legend: string;
+  name: string;
+  type?: 'checkbox' | 'radio';
+  options: Option[];
+}
+const { legend, name, type = 'checkbox', options } = Astro.props;
+---
+
+<fieldset class="border-b border-line py-5 first:pt-0">
+  <legend class="float-left mb-3 w-full font-head text-sm font-bold tracking-wide uppercase">{legend}</legend>
+  <ul class="clear-both space-y-1.5">
+    {
+      options.map((o, i) => {
+        const id = `f-${name}-${o.value || 'any'}-${i}`;
+        return (
+          <li>
+            <label for={id} class="flex cursor-pointer items-center gap-2.5 rounded-md py-0.5 text-sm hover:text-gold-strong">
+              <input
+                id={id}
+                type={type}
+                name={name}
+                value={o.value}
+                checked={type === 'radio' && i === 0}
+                data-label={o.label}
+              />
+              <span class="flex-1">{o.label}</span>
+              {o.count !== undefined && <span class="text-mono-meta text-ink-muted">{o.count}</span>}
+            </label>
+          </li>
+        );
+      })
+    }
+  </ul>
+</fieldset>

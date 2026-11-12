@@ -1,0 +1,345 @@
+---
+import { getImage } from 'astro:assets';
+import RecipeLayout from '../../../layouts/RecipeLayout.astro';
+import PhotoFigure from '../../../components/recipe-detail/PhotoFigure.astro';
+import MetaBlock from '../../../components/recipe-detail/MetaBlock.astro';
+import TableOfContents from '../../../components/recipe-detail/TableOfContents.astro';
+import Ingredients from '../../../components/recipe-detail/Ingredients.astro';
+import Instructions from '../../../components/recipe-detail/Instructions.astro';
+import Tips from '../../../components/recipe-detail/Tips.astro';
+import Substitutions from '../../../components/recipe-detail/Substitutions.astro';
+import Nutrition from '../../../components/recipe-detail/Nutrition.astro';
+import Faq from '../../../components/recipe-detail/Faq.astro';
+import RecipeCard from '../../../components/ui/RecipeCard.astro';
+import Rating from '../../../components/ui/Rating.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import { siteConfig } from '../../../config/site';
+import { categories, cuisines } from '../../../data/categories';
+import { getRecipe, getRecipeSlugs, getRelatedRecipes } from '../../../data/recipes';
+import { locales, type Locale } from '../../../i18n/config';
+import { absoluteUrl, localizePath } from '../../../i18n/routing';
+import { fmt, formatDate, useTranslations } from '../../../i18n/translations';
+import { recipeJsonLd } from '../../../lib/schema';
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) => getRecipeSlugs().map((slug) => ({ params: { locale, slug } })));
+}
+
+const locale = Astro.params.locale as Locale;
+const recipe = getRecipe(Astro.params.slug!, locale)!;
+const t = useTranslations(locale);
+const r = recipe.t;
+const related = getRelatedRecipes(recipe, locale, 3);
+const recipesUrl = localizePath(locale, '/recipes');
+const categoryLabel = categories.find((c) => c.id === recipe.categories[0])?.label[locale];
+const cuisineLabel = cuisines.find((c) => c.id === recipe.cuisines[0])?.label[locale];
+
+// Social + structured-data images: real files at fixed sizes.
+const og = await getImage({ src: r.images.hero.src, width: siteConfig.images.og.width, height: siteConfig.images.og.height, fit: 'cover', format: 'jpg', quality: 80 });
+const ldImages = await Promise.all(
+  (['hero', 'ingredients', 'finalDish'] as const).map(async (slot) => {
+    const img = await getImage({ src: r.images[slot].src, width: 1200, format: 'jpg', quality: 80 });
+    return absoluteUrl(img.src);
+  }),
+);
+const jsonLd = recipeJsonLd(recipe, locale, ldImages);
+---
+
+<RecipeLayout
+  locale={locale}
+  title={r.title}
+  description={r.description}
+  path={`/recipes/${recipe.slug}`}
+  image={absoluteUrl(og.src)}
+  imageAlt={r.images.hero.alt}
+  publishedTime={recipe.datePublished}
+  modifiedTime={recipe.dateModified}
+  jsonLd={jsonLd}
+>
+  <article class="recipe" data-recipe={recipe.slug}>
+    <!-- ============ Header ============ -->
+    <header class="shell-content pt-8 lg:pt-12">
+      <nav aria-label={t.a11y.breadcrumb} data-print="hide">
+        <ol class="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+          <li><a href={localizePath(locale, '/')} class="hover:text-ink">{t.recipe.breadcrumbHome}</a></li>
+          <li aria-hidden="true">/</li>
+          <li><a href={recipesUrl} class="hover:text-ink">{t.recipe.breadcrumbRecipes}</a></li>
+          <li aria-hidden="true">/</li>
+          <li><a href={`${recipesUrl}/${recipe.slug}`} aria-current="page" class="font-semibold text-ink no-underline">{r.title}</a></li>
+        </ol>
+      </nav>
+
+      <div class="mt-8 max-w-4xl">
+        <p class="kicker">
+          <a href={`${recipesUrl}?category=${recipe.categories[0]}`} class="no-underline hover:underline">{categoryLabel}</a>
+          <span aria-hidden="true">·</span>
+          <a href={`${recipesUrl}?cuisine=${recipe.cuisines[0]}`} class="no-underline hover:underline">{cuisineLabel}</a>
+        </p>
+        <h1 class="display mt-4 text-recipe text-balance">{r.title}</h1>
+        <p class="mt-5 max-w-3xl text-lead text-ink-muted">{r.description}</p>
+      </div>
+
+      <div class="mt-8 flex flex-col gap-6 border-y border-line py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+          <address class="flex items-center gap-3 not-italic">
+            <span class="grid size-10 place-items-center rounded-full bg-gold font-serif text-lg font-bold text-gold-contrast" aria-hidden="true">
+              {r.author.name.charAt(0)}
+            </span>
+            <span>
+              <span class="text-ink-muted">{t.recipe.by}</span>{' '}
+              <a rel="author" href={`${localizePath(locale, '/')}#about`} class="font-semibold no-underline hover:underline">{r.author.name}</a>
+              <span class="block text-xs text-ink-muted">{r.author.role}</span>
+            </span>
+          </address>
+          <dl class="flex flex-wrap gap-x-5 gap-y-1 text-ink-muted">
+            <div class="flex gap-1">
+              <dt>{t.recipe.published}</dt>
+              <dd><time datetime={recipe.datePublished} class="text-ink">{formatDate(recipe.datePublished, locale)}</time></dd>
+            </div>
+            <div class="flex gap-1">
+              <dt>{t.recipe.updated}</dt>
+              <dd><time datetime={recipe.dateModified} class="text-ink">{formatDate(recipe.dateModified, locale)}</time></dd>
+            </div>
+            <div class="flex gap-1">
+              <dt class="sr-only">{t.card.ratingLabel}</dt>
+              <dd><Rating value={recipe.rating.value} count={recipe.rating.count} locale={locale} size="md" /></dd>
+            </div>
+            <div class="flex items-center gap-1">
+              <dt><Icon name="clock" size={15} /><span class="sr-only">{t.recipe.readingTimeLabel}</span></dt>
+              <dd>{fmt(t.recipe.readingTime, { n: recipe.readingMinutes })}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Actions: native buttons; behaviour in recipe-interactions.ts. -->
+        <div class="flex flex-wrap gap-2 lg:shrink-0 lg:flex-nowrap" role="group" aria-label={t.recipe.actions.title} data-print="hide">
+          <!--
+            Both buttons stack every label they can show in one grid cell, so
+            the button is always as wide as its longest label and toggling
+            state never shifts the layout around it.
+          -->
+          <button type="button" class="action-btn btn btn-outline btn-sm" data-action="save" aria-pressed="false" aria-label={t.recipe.actions.save}>
+            <span class="action-icon" aria-hidden="true">
+              <Icon name="bookmark" size={16} class="icon-bookmark" />
+            </span>
+            <span class="label-stack">
+              <span class="label-off">{t.recipe.actions.save}</span>
+              <span class="label-on">{t.recipe.actions.saved}</span>
+            </span>
+          </button>
+          <button type="button" class="action-btn btn btn-outline btn-sm" data-action="copy" data-state="idle" aria-label={t.recipe.actions.copy}>
+            <span class="action-icon" aria-hidden="true">
+              <Icon name="copy" size={16} class="icon-off" />
+              <Icon name="check" size={16} class="icon-on" />
+            </span>
+            <span class="label-stack">
+              <span class="label-off">{t.recipe.actions.copy}</span>
+              <span class="label-on">{t.recipe.actions.copiedShort}</span>
+              <span class="label-fail">{t.recipe.actions.copyFailedShort}</span>
+            </span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" data-action="print">
+            <Icon name="print" size={16} />
+            {t.recipe.actions.print}
+          </button>
+        </div>
+      </div>
+      <p
+        class="sr-only"
+        role="status"
+        data-action-status
+        data-copied={t.recipe.actions.copied}
+        data-copy-failed={t.recipe.actions.copyFailed}
+        data-saved={t.recipe.actions.savedAnnounce}
+        data-unsaved={t.recipe.actions.unsavedAnnounce}
+      >
+      </p>
+    </header>
+
+    <!-- ============ Hero photo ============ -->
+    <div class="shell-content mt-8">
+      <PhotoFigure image={r.images.hero} locale={locale} sizes="(min-width: 80rem) 1240px, 96vw" widths={[640, 960, 1280, 1600]} eager frameClass="aspect-photo md:aspect-cinema" />
+    </div>
+
+    <!-- ============ Body: TOC + Markdown-style article ============ -->
+    <!--
+      Below lg this is plain block flow and the TOC wrapper is display:contents,
+      so the sticky section strip's containing block is the whole article (it
+      stays pinned while reading). From lg up it is a two-column grid.
+    -->
+    <div class="shell-content mt-10 lg:grid lg:grid-cols-[var(--layout-toc-width)_minmax(0,var(--layout-article-width))] lg:gap-x-12">
+      <div class="max-lg:contents lg:row-span-2">
+        <TableOfContents locale={locale} />
+      </div>
+
+      <div class="md mt-8 min-w-0 lg:mt-0">
+        <p class="headnote">{r.headnote}</p>
+        <MetaBlock recipe={recipe} locale={locale} />
+        <Ingredients recipe={recipe} locale={locale} />
+        <Instructions recipe={recipe} locale={locale} />
+        <Tips recipe={recipe} locale={locale} />
+        <Substitutions recipe={recipe} locale={locale} />
+        <Nutrition recipe={recipe} locale={locale} />
+        <Faq recipe={recipe} locale={locale} />
+
+        <footer class="mt-12 flex flex-wrap gap-2 border-t border-line pt-6">
+          {r.keywords.map((k) => <span class="chip">#{k.replace(/\s+/g, '')}</span>)}
+        </footer>
+      </div>
+    </div>
+  </article>
+
+  <!-- Related recipes live outside the <article>: complementary, not part of it. -->
+  <aside aria-labelledby="related-title" class="shell-content mt-(--space-3xl)" data-print="hide">
+    <div class="rule-ornament mb-8" aria-hidden="true">✦</div>
+    <p class="kicker">{t.recipe.sections.related}</p>
+    <h2 id="related-title" class="section-title mt-3 mb-8">{t.recipe.related}</h2>
+    <ul class="grid gap-6 md:grid-cols-3" role="list">
+      {related.map((rel) => <li><RecipeCard recipe={rel} locale={locale} /></li>)}
+    </ul>
+  </aside>
+</RecipeLayout>
+
+<style>
+  .headnote {
+    font-size: var(--text-fluid-lead);
+    line-height: var(--leading-relaxed);
+  }
+  .headnote::first-letter {
+    float: inline-start;
+    margin: 0.08em 0.12em 0 0;
+    font-family: var(--font-display);
+    font-size: 4.2em;
+    font-weight: var(--weight-bold);
+    line-height: 0.8;
+    color: var(--color-accent-strong);
+  }
+  /* ---------- Save / Copy action buttons ---------- */
+  .label-stack {
+    display: inline-grid;
+  }
+  .label-stack > * {
+    grid-area: 1 / 1;
+    text-align: center;
+    transition:
+      opacity var(--transition-fast),
+      translate var(--transition-fast);
+  }
+  .label-on,
+  .label-fail {
+    opacity: 0;
+    translate: 0 0.4em;
+    visibility: hidden;
+  }
+  .action-btn[aria-pressed='true'] .label-off,
+  .action-btn[data-state='copied'] .label-off,
+  .action-btn[data-state='failed'] .label-off {
+    opacity: 0;
+    translate: 0 -0.4em;
+    visibility: hidden;
+  }
+  .action-btn[aria-pressed='true'] .label-on,
+  .action-btn[data-state='copied'] .label-on,
+  .action-btn[data-state='failed'] .label-fail {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+  }
+
+  .action-icon {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+  .action-icon > :global(svg) {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--transition-fast),
+      scale var(--transition-fast);
+  }
+
+  /* Save: the bookmark fills in when the recipe is saved. */
+  .action-btn :global(.icon-bookmark path) {
+    fill: transparent;
+    transition: fill var(--transition-fast);
+  }
+  .action-btn[aria-pressed='true'] :global(.icon-bookmark path) {
+    fill: currentColor;
+  }
+
+  /* Copy: the copy icon swaps to a check mark while "Copied!" shows. */
+  .action-icon > :global(.icon-on) {
+    opacity: 0;
+    scale: 0.4;
+  }
+  .action-btn[data-state='copied'] .action-icon > :global(.icon-off) {
+    opacity: 0;
+    scale: 0.4;
+  }
+  .action-btn[data-state='copied'] .action-icon > :global(.icon-on) {
+    opacity: 1;
+    scale: 1;
+  }
+  .action-btn[data-state='copied'] {
+    border-color: var(--color-tip);
+    color: var(--color-tip);
+  }
+  .action-btn[data-state='failed'] {
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+  }
+
+  /*
+    The "pop": only plays right after a click (JS adds .is-popping), never on
+    page load when a saved state is restored.
+  */
+  .action-icon::after {
+    content: '';
+    position: absolute;
+    inset: -0.45rem;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    scale: 0.3;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .action-btn.is-popping .action-icon > :global(svg) {
+      animation: icon-pop 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .action-btn.is-popping .action-icon::after {
+      animation: icon-burst 500ms ease-out;
+    }
+    .action-btn[data-state='failed'].is-popping {
+      animation: shake 400ms ease-in-out;
+    }
+    .action-btn[data-state='failed'].is-popping .action-icon > :global(svg),
+    .action-btn[data-state='failed'].is-popping .action-icon::after {
+      animation: none;
+    }
+    /* Unsaving gets a gentler shrink, no burst. */
+    .action-btn[aria-pressed='false'].is-popping .action-icon > :global(svg) {
+      animation: icon-shrink 300ms ease-out;
+    }
+    .action-btn[aria-pressed='false'].is-popping .action-icon::after {
+      animation: none;
+    }
+  }
+  @keyframes icon-pop {
+    0% { scale: 1; rotate: 0deg; }
+    35% { scale: 0.6; rotate: -12deg; }
+    70% { scale: 1.3; rotate: 6deg; }
+    100% { scale: 1; rotate: 0deg; }
+  }
+  @keyframes icon-burst {
+    0% { opacity: 0.7; scale: 0.3; }
+    100% { opacity: 0; scale: 1.6; }
+  }
+  @keyframes shake {
+    20%, 60% { translate: -3px 0; }
+    40%, 80% { translate: 3px 0; }
+  }
+  @keyframes icon-shrink {
+    50% { scale: 0.75; }
+  }
+</style>

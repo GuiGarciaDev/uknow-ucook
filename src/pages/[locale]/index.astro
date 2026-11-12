@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/home/Hero.astro';
+import FeaturedRecipes from '../../components/home/FeaturedRecipes.astro';
+import CategoryGrid from '../../components/home/CategoryGrid.astro';
+import TrendingRecipes from '../../components/home/TrendingRecipes.astro';
+import Inspiration from '../../components/home/Inspiration.astro';
+import AboutNewsletter from '../../components/home/AboutNewsletter.astro';
+import { siteConfig } from '../../config/site';
+import { getFeaturedRecipes, getRecipes, getTrendingRecipes } from '../../data/recipes';
+import type { Locale } from '../../i18n/config';
+import { absoluteUrl, localeParams, localizePath } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+export const getStaticPaths = localeParams;
+
+const locale = Astro.params.locale as Locale;
+const t = useTranslations(locale);
+const recipes = getRecipes(locale);
+const featured = getFeaturedRecipes(locale);
+const trending = getTrendingRecipes(locale, 5);
+const cover = featured[0]!;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.brand.name,
+    url: absoluteUrl(localizePath(locale, '/')),
+    inLanguage: locale,
+    description: siteConfig.brand.description[locale],
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${absoluteUrl(localizePath(locale, '/recipes'))}?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteConfig.brand.name,
+    url: absoluteUrl('/'),
+    logo: absoluteUrl('/favicon.svg'),
+  },
+];
+---
+
+<BaseLayout locale={locale} fullTitle={t.meta.homeTitle} description={t.meta.homeDescription} path="/" jsonLd={jsonLd}>
+  <Hero locale={locale} cover={cover} slugs={recipes.map((r) => r.slug)} />
+  <FeaturedRecipes locale={locale} recipes={featured} />
+  <CategoryGrid locale={locale} recipes={recipes} />
+  <TrendingRecipes locale={locale} recipes={trending} />
+  <Inspiration locale={locale} />
+  <AboutNewsletter locale={locale} />
+</BaseLayout>

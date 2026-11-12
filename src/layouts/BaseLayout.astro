@@ -1,0 +1,64 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import SeoHead, { type SeoProps } from '../components/layout/SeoHead.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { siteConfig } from '../config/site';
+import { localeMeta } from '../i18n/config';
+import { useTranslations } from '../i18n/translations';
+
+type Props = SeoProps & {
+  /** Hide header/footer (used by the language redirect page). */
+  bare?: boolean;
+};
+
+const { bare = false, ...seo } = Astro.props;
+const { locale } = seo;
+const t = useTranslations(locale);
+const themeKey = siteConfig.theme.storageKey;
+---
+
+<!doctype html>
+<html lang={localeMeta[locale].htmlLang} dir="ltr" id="top">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Apply the saved/OS theme before first paint: no flash of the wrong theme. -->
+    <script is:inline define:vars={{ themeKey }}>
+      try {
+        var s = localStorage.getItem(themeKey);
+        var dark = s === 'dark' || (s !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content={siteConfig.seo.themeColor.light} />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content={siteConfig.seo.themeColor.dark} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+    <Font cssVariable="--font-source-playfair" preload={[{ style: 'normal', subset: 'latin' }]} />
+    <Font cssVariable="--font-source-dm-sans" preload={[{ style: 'normal', subset: 'latin' }]} />
+    <SeoHead {...seo} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="skip-link sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-btn focus:bg-ink focus:px-4 focus:py-3 focus:text-canvas"
+    >
+      {t.a11y.skipToContent}
+    </a>
+    {!bare && <Header locale={locale} />}
+    <main id="main" tabindex="-1" class="outline-none">
+      <slot />
+    </main>
+    {!bare && <Footer locale={locale} />}
+
+    <script>
+      import '../scripts/theme';
+      import '../scripts/locale';
+    </script>
+  </body>
+</html>

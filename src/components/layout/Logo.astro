@@ -1,0 +1,38 @@
+---
+import { siteConfig } from '../../config/site';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+  size?: 'md' | 'lg';
+}
+const { locale, size = 'md' } = Astro.props;
+const [a, u, b] = siteConfig.brand.logo.wordmark;
+const t = useTranslations(locale);
+---
+
+<a
+  href={localizePath(locale, '/')}
+  class="group inline-flex min-w-0 items-center gap-2.5 rounded-md no-underline max-[23.75rem]:gap-1.5"
+  aria-label={`${siteConfig.brand.name} — ${t.nav.home}`}
+>
+  <svg
+    width={size === 'lg' ? 44 : 34}
+    height={size === 'lg' ? 44 : 34}
+    viewBox="0 0 64 64"
+    aria-hidden="true"
+    class="shrink-0 transition-transform duration-300 group-hover:-rotate-12"
+  >
+    <circle cx="32" cy="32" r="30" fill="var(--color-accent)"></circle>
+    <path
+      d="M20 22c0-4 3.5-7 7.5-6.5C29 12 35 11 38 14.5c4-1.5 8.5 1.5 8 6 3 1.5 3.5 6.5-.5 8.5H20.5C16.5 27 17 22.5 20 22Z"
+      fill="var(--color-text-inverse)"></path>
+    <path d="M22 31h22v13a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4Z" fill="var(--color-text-inverse)"></path>
+    <path d="M27 36v6M33 36v6M39 36v6" stroke="var(--color-accent)" stroke-width="2.4" stroke-linecap="round"></path>
+  </svg>
+  <span class:list={['font-serif font-bold tracking-tight text-ink', size === 'lg' ? 'text-3xl' : 'text-xl max-[23.75rem]:text-lg']}>
+    {a}<span class="text-gold-strong italic">{u}</span>{b}
+  </span>
+</a>

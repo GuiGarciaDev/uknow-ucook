@@ -1,0 +1,95 @@
+---
+/**
+ * Recipe card. One focusable link (the title) stretched over the card, so
+ * keyboard users get a single tab stop and screen readers a clean name.
+ */
+import { Picture } from 'astro:assets';
+import Icon from './Icon.astro';
+import Rating from './Rating.astro';
+import { siteConfig } from '../../config/site';
+import { categories, difficulties } from '../../data/categories';
+import type { Recipe } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { localizePath } from '../../i18n/routing';
+import { formatMinutes, isoDuration, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  recipe: Recipe;
+  locale: Locale;
+  headingLevel?: 'h2' | 'h3';
+  variant?: 'default' | 'wide';
+  eager?: boolean;
+  sizes?: string;
+}
+
+const {
+  recipe,
+  locale,
+  headingLevel: Heading = 'h3',
+  variant = 'default',
+  eager = false,
+  sizes = '(min-width: 64rem) 30vw, (min-width: 40rem) 45vw, 92vw',
+} = Astro.props;
+const t = useTranslations(locale);
+const category = categories.find((c) => c.id === recipe.categories[0]);
+const difficulty = difficulties.find((d) => d.id === recipe.difficulty);
+const href = localizePath(locale, `/recipes/${recipe.slug}`);
+const { card } = siteConfig.recipes;
+---
+
+<article
+  class:list={[
+    'group card-surface relative flex h-full overflow-hidden transition-shadow duration-300 hover:shadow-float',
+    variant === 'wide' ? 'flex-col md:flex-row' : 'flex-col',
+  ]}
+>
+  <div class:list={['relative overflow-hidden', variant === 'wide' ? 'aspect-photo md:aspect-auto md:w-1/2' : 'aspect-photo']}>
+    <Picture
+      src={recipe.t.images.hero.src}
+      alt={recipe.t.images.hero.alt}
+      formats={['avif', 'webp']}
+      widths={[400, 640, 960]}
+      sizes={sizes}
+      quality={siteConfig.images.quality}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : 'auto'}
+      decoding="async"
+      class="media-zoom h-full w-full object-cover"
+    />
+    {
+      card.showCategory && category && (
+        <span class="chip absolute top-3 left-3 border-transparent bg-canvas/90 backdrop-blur">{category.label[locale]}</span>
+      )
+    }
+  </div>
+
+  <div class="flex flex-1 flex-col gap-3 p-5">
+    <Heading class="font-serif text-2xl leading-tight font-bold text-balance">
+      <a href={href} class="stretched-link no-underline decoration-gold decoration-2 group-hover:underline">
+        {recipe.t.title}
+      </a>
+    </Heading>
+    <p class="line-clamp-2 text-sm text-ink-muted">{recipe.t.description}</p>
+
+    <dl class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-3 text-xs text-ink-muted">
+      <div class="flex items-center gap-1.5">
+        <dt><Icon name="clock" size={15} /><span class="sr-only">{t.card.totalTime}</span></dt>
+        <dd><time datetime={isoDuration(recipe.totalMinutes)}>{formatMinutes(recipe.totalMinutes, locale)}</time></dd>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <dt><Icon name="gauge" size={15} /><span class="sr-only">{t.card.difficulty}</span></dt>
+        <dd>{difficulty?.label[locale]}</dd>
+      </div>
+      {
+        card.showRating && (
+          <div class="ml-auto flex items-center">
+            <dt class="sr-only">{t.card.ratingLabel}</dt>
+            <dd>
+              <Rating value={recipe.rating.value} locale={locale} />
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+  </div>
+</article>

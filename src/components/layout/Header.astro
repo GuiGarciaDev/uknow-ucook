@@ -1,0 +1,180 @@
+---
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import SearchForm from './SearchForm.astro';
+import Icon from '../ui/Icon.astro';
+import type { Locale } from '../../i18n/config';
+import { localizePath, stripLocale } from '../../i18n/routing';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const pathname = Astro.url.pathname;
+const bare = stripLocale(pathname);
+
+const links = [
+  { href: localizePath(locale, '/'), label: t.nav.home, current: bare === '/' },
+  { href: localizePath(locale, '/recipes'), label: t.nav.recipes, current: bare.startsWith('/recipes') },
+  { href: `${localizePath(locale, '/')}#about`, label: t.nav.about, current: false },
+];
+---
+
+<header data-site-header class="site-header sticky top-0 z-40 border-b border-line">
+  <div class="shell flex h-(--layout-header-height) items-center gap-4 max-[23.75rem]:gap-2">
+    <Logo locale={locale} />
+
+    <nav aria-label={t.a11y.mainNav} class="ml-6 hidden lg:block">
+      <ul class="flex items-center gap-1">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.current ? 'page' : undefined} class="nav-link">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2 max-[23.75rem]:gap-1">
+      <SearchForm locale={locale} id="header-search" class="hidden w-64 xl:block" />
+      <a
+        href={`${localizePath(locale, '/recipes')}#recipe-search`}
+        class="btn btn-outline btn-icon xl:hidden"
+        aria-label={t.nav.search}
+        title={t.nav.search}
+      >
+        <Icon name="search" />
+      </a>
+      <div class="hidden sm:block">
+        <LanguageSwitcher locale={locale} pathname={pathname} />
+      </div>
+      <ThemeToggle locale={locale} />
+      <button
+        type="button"
+        class="btn btn-outline btn-icon lg:hidden"
+        popovertarget="mobile-menu"
+        aria-label={t.a11y.openMenu}
+      >
+        <Icon name="menu" />
+      </button>
+    </div>
+  </div>
+
+  <!--
+    Mobile navigation uses the native Popover API: no JS, light-dismiss,
+    Escape to close and focus return are built in.
+  -->
+  <div id="mobile-menu" popover class="mobile-menu">
+    <div class="flex items-center justify-between">
+      <span class="kicker">{t.a11y.menu}</span>
+      <button
+        type="button"
+        class="btn btn-outline btn-icon"
+        popovertarget="mobile-menu"
+        popovertargetaction="hide"
+        aria-label={t.a11y.closeMenu}
+      >
+        <Icon name="close" />
+      </button>
+    </div>
+    <nav aria-label={t.a11y.mainNav} class="mt-8">
+      <ul class="space-y-1">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.current ? 'page' : undefined} class="mobile-link">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <SearchForm locale={locale} id="mobile-search" class="mt-8" />
+    <div class="mt-8">
+      <p class="kicker mb-3">{t.language.label}</p>
+      <LanguageSwitcher locale={locale} pathname={pathname} variant="full" />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    background: color-mix(in srgb, var(--color-background) 82%, transparent);
+    backdrop-filter: blur(12px) saturate(1.4);
+  }
+
+  .nav-link {
+    position: relative;
+    display: block;
+    padding: var(--space-2xs) var(--space-sm);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
+    color: var(--color-text-primary);
+  }
+  .nav-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--space-sm);
+    inset-block-end: 0;
+    block-size: 2px;
+    border-radius: 2px;
+    background: var(--color-accent);
+  }
+
+  .mobile-menu {
+    position: fixed;
+    inset: 0 0 0 auto;
+    margin: 0;
+    inline-size: min(22rem, 88vw);
+    block-size: 100dvh;
+    max-block-size: none;
+    padding: var(--space-md);
+    border: 0;
+    border-inline-start: 1px solid var(--color-border);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-lifted);
+    overflow-y: auto;
+  }
+  .mobile-menu::backdrop {
+    background: var(--color-overlay);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-menu:popover-open {
+      animation: slide-in var(--transition-base);
+    }
+  }
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+
+  .mobile-link {
+    display: block;
+    padding: var(--space-2xs);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    text-decoration: none;
+  }
+  .mobile-link:hover,
+  .mobile-link[aria-current='page'] {
+    color: var(--color-accent-strong);
+  }
+</style>

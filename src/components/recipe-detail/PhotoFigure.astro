@@ -1,0 +1,53 @@
+---
+/** A captioned, credited photograph (<figure> + <figcaption>). */
+import { Picture } from 'astro:assets';
+import { siteConfig } from '../../config/site';
+import type { LocalizedImage } from '../../data/types';
+import type { Locale } from '../../i18n/config';
+import { fmt, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  image: LocalizedImage;
+  locale: Locale;
+  sizes: string;
+  widths?: number[];
+  eager?: boolean;
+  class?: string;
+  frameClass?: string;
+}
+const {
+  image,
+  locale,
+  sizes,
+  widths = [640, 960, 1280, 1600],
+  eager = false,
+  class: className,
+  frameClass = 'aspect-cinema',
+} = Astro.props;
+const t = useTranslations(locale);
+---
+
+<figure class={className}>
+  <div class:list={['overflow-hidden rounded-xl bg-card-muted', frameClass]}>
+    <Picture
+      src={image.src}
+      alt={image.alt}
+      formats={['avif', 'webp']}
+      widths={widths}
+      sizes={sizes}
+      quality={siteConfig.images.quality}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : 'auto'}
+      decoding={eager ? 'sync' : 'async'}
+      class="h-full w-full object-cover"
+    />
+  </div>
+  <figcaption class="mt-3 flex flex-col gap-1 text-sm text-ink-muted sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+    <span class="font-serif text-base text-ink italic">{image.caption}</span>
+    <small class="shrink-0 text-xs">
+      <a href={image.credit.source} rel="noopener" class="hover:text-ink">
+        {fmt(t.recipe.photoCredit, { author: image.credit.author, license: image.credit.license })}
+      </a>
+    </small>
+  </figcaption>
+</figure>

@@ -1,0 +1,44 @@
+---
+import type { Locale } from '../../i18n/config';
+import { fmt, formatNumber, useTranslations } from '../../i18n/translations';
+
+interface Props {
+  value: number;
+  count?: number;
+  locale: Locale;
+  size?: 'sm' | 'md';
+}
+const { value, count, locale, size = 'sm' } = Astro.props;
+const t = useTranslations(locale);
+const pct = `${(value / 5) * 100}%`;
+const label = fmt(t.card.rating, { rating: formatNumber(value, locale) });
+---
+
+<span class:list={['inline-flex items-center gap-1.5', size === 'sm' ? 'text-xs' : 'text-sm']}>
+  <!-- Visual stars are decorative; the text below carries the meaning. -->
+  <span class="stars" style={`--pct:${pct}`} aria-hidden="true">★★★★★</span>
+  <span class="font-semibold text-ink">
+    <span aria-hidden="true">{formatNumber(value, locale)}</span>
+    <span class="sr-only">{label}</span>
+  </span>
+  {count !== undefined && <span class="text-ink-muted">({fmt(t.card.ratingCount, { n: formatNumber(count, locale, 0) })})</span>}
+</span>
+
+<style>
+  .stars {
+    position: relative;
+    display: inline-block;
+    letter-spacing: 0.05em;
+    color: var(--color-border-strong);
+    line-height: 1;
+  }
+  .stars::before {
+    content: '★★★★★';
+    position: absolute;
+    inset: 0;
+    inline-size: var(--pct);
+    overflow: hidden;
+    color: var(--color-accent);
+    white-space: nowrap;
+  }
+</style>
