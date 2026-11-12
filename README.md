@@ -35,12 +35,16 @@ The catalogue has **30 recipes** — with a strong Brazilian accent (feijoada, m
 - Hero with a live recipe count, featured and trending recipes, category tiles, tips and a pull-quote.
 - Scroll-driven animations: staggered reveals, hero parallax, a horizontal snap strip of categories on mobile, and a pull-quote whose words light up as you scroll.
 - Newsletter section (intentionally disabled — there is no backend).
+<img width="1904" height="906" alt="image" src="https://github.com/user-attachments/assets/b691a01e-43bb-4791-9ea6-d0cb0ccac0fd" />
+
 
 **Recipes page** (`/<locale>/recipes`)
 - Full-text search, multi-select filters (category, cuisine, prep time, difficulty, diet, main ingredient), minimum rating, maximum cook time, and a "Saved only" switch.
 - Five sort orders: newest, most popular, best rated, fastest, A–Z.
 - Every filter is reflected in the URL, so any view can be bookmarked or shared.
 - Active-filter chips, "show more" pagination, and empty states.
+<img width="1906" height="906" alt="image" src="https://github.com/user-attachments/assets/9adc9125-c0ba-4ffa-8d74-bea8781f37fa" />
+
 
 **Recipe page** (`/<locale>/recipes/<slug>`)
 - Servings adjuster that rescales every ingredient quantity.
@@ -49,6 +53,12 @@ The catalogue has **30 recipes** — with a strong Brazilian accent (feijoada, m
 - Step-by-step instructions with timings and tips, chef notes, common mistakes, storage advice, substitutions, FAQ (animated open/close) and nutrition facts.
 - Sticky table of contents with scroll spy.
 - Photo credits and licences under every image.
+<img width="1902" height="909" alt="image" src="https://github.com/user-attachments/assets/0aa42601-85de-454d-84f5-fc0235fd7ca4" />
+<img width="1905" height="903" alt="image" src="https://github.com/user-attachments/assets/f72f6ad0-1819-4980-aa41-8abc7c4c64a4" />
+<img width="1904" height="906" alt="image" src="https://github.com/user-attachments/assets/2cdc63b6-e36c-494f-972b-4d70e7ae4fe6" />
+
+
+
 
 **Site-wide**
 - Light / dark / system theme with no flash of the wrong theme.
